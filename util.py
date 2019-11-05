@@ -1,7 +1,6 @@
 import logging
 
 import torch
-from torch import nn
 
 
 def save_model(save_dir, generator, discriminator, generator_opt, discriminator_opt):
@@ -18,7 +17,7 @@ def save_model(save_dir, generator, discriminator, generator_opt, discriminator_
         }, f)
 
 
-def load_model(model_path, generator: nn.Module, discriminator, generator_opt, discriminator_opt, device):
+def load_model(model_path, generator, discriminator, generator_opt, discriminator_opt, device):
     logging.info(f'load model from {str(model_path)}')
 
     with model_path.open('rb') as f:
