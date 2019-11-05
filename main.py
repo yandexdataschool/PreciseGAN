@@ -43,7 +43,7 @@ def main_train(args):
     train_indices, val_indices = split_data(dataset, 0.15, True)
 
     train(generator, discriminator, args, Subset(dataset, train_indices), optimizer_g, optimizer_d,
-          test_dataset=dataset.items[val_indices], ecaluate_every=500, experiment=experiment, device=device)
+          test_dataset=dataset.items[val_indices], ecaluate_every=args.log_every, experiment=experiment, device=device)
 
     n_events = len(dataset)
     steps = n_events // 512
@@ -64,6 +64,7 @@ if __name__ == '__main__':
     parser.add_argument('-b', '--batch_size', type=int, default=32)
     parser.add_argument('-lr', '--learning_rate', type=float, default=1e-2)
     parser.add_argument('-tr', '--training_ratio', type=int, default=1)
+    parser.add_argument('-le', '--log_every', type=int, default=500)
     parser.add_argument('-n', '--gan_noise_size', type=int, default=128)
     args = parser.parse_args()
 
