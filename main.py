@@ -2,8 +2,8 @@ import argparse
 import logging
 import pickle
 
-from comet_ml import Experiment
 import torch
+from comet_ml import Experiment
 from torch.utils.data.dataset import Subset
 
 from data import DiJetDataset, split_data
@@ -11,9 +11,12 @@ from eval import evaluate_model
 from model import GeneratorCNN, DiscriminatorCNN
 from optim import setup_optimizer
 from train import train
+from util import fix_seed
 
 
 def main_train(args):
+    fix_seed(args.seed)
+
     device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
 
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
@@ -47,7 +50,8 @@ def main_train(args):
     train_indices, val_indices = split_data(dataset, 0.15, True)
 
     train(generator, discriminator, args, Subset(dataset, train_indices), optimizer_g, optimizer_d, scaler=scaler,
-          test_dataset=dataset.items[val_indices], ecaluate_every=args.log_every, experiment=experiment, device=device)
+          test_dataset=dataset.items[val_indices][:len(val_indices) // 10],
+          ecaluate_every=args.log_every, experiment=experiment, device=device)
 
     n_events = len(dataset)
     steps = n_events // 512
@@ -70,6 +74,7 @@ if __name__ == '__main__':
     parser.add_argument('-tr', '--training_ratio', type=int, default=1)
     parser.add_argument('-le', '--log_every', type=int, default=500)
     parser.add_argument('-n', '--gan_noise_size', type=int, default=128)
+    parser.add_argument('--seed', type=int, default=48)
     args = parser.parse_args()
 
     main_train(args)

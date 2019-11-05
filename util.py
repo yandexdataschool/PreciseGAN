@@ -1,5 +1,7 @@
 import logging
+import random
 
+import numpy as np
 import torch
 
 
@@ -26,3 +28,9 @@ def load_model(model_path, generator, discriminator, generator_opt, discriminato
         discriminator.load_state_dict(weights['discriminator'])
         generator_opt.load_state_dict(weights['generator_opt'])
         discriminator_opt.load_state_dict(weights['discriminator_opt'])
+
+
+def fix_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
