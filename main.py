@@ -6,7 +6,7 @@ import torch
 
 from data import get_data
 from eval import evaluate_model
-from model import GeneratorCNN, DiscriminatorCNN
+from model import get_models
 from optim import setup_optimizer
 from train import train
 from util import fix_seed
@@ -24,8 +24,7 @@ def main_train(args):
 
     n_features = dataset_train.items.shape[1]
 
-    generator = GeneratorCNN(args.gan_noise_size, n_features).to(device)
-    discriminator = DiscriminatorCNN(n_features).to(device)
+    generator, discriminator = get_models(args, n_features, device)
 
     optimizer_d = setup_optimizer(discriminator, args.learning_rate, weight_decay=0)
     optimizer_g = setup_optimizer(generator, args.learning_rate, weight_decay=0)
@@ -47,7 +46,8 @@ def main_train(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--training_filename')
-    parser.add_argument('-l', '--level', default="reco")
+    parser.add_argument('-a', '--architecture', default='cnn', choices={'cnn', 'fc'})
+    parser.add_argument('-l', '--level', default="ptcl")
     parser.add_argument('-p', '--preselection', default="pt250")
     parser.add_argument('-s', '--systematic', default="nominal")
     parser.add_argument('-d', '--dsid', default="mg5_dijet_ht500")

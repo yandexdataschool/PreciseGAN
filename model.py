@@ -64,11 +64,11 @@ class GeneratorFC(nn.Module):
 
 
 class DiscriminatorCNN(nn.Module):
-    def __init__(self, gan_noise_size):
+    def __init__(self, gan_output_size):
         super().__init__()
 
         self.layers = nn.Sequential(
-            nn.Linear(gan_noise_size, 128),
+            nn.Linear(gan_output_size, 128),
             View((2, 8, 8)),
             nn.LeakyReLU(negative_slope=0.2),
             nn.Conv2d(in_channels=2, out_channels=64, kernel_size=3, stride=1, padding=1),
@@ -89,13 +89,13 @@ class DiscriminatorCNN(nn.Module):
 
 
 class DiscriminatorFC(nn.Module):
-    def __init__(self, gan_noise_size):
+    def __init__(self, gan_output_size):
         super().__init__()
 
         self.layers = nn.Sequential(
-            nn.Linear(gan_noise_size, 128),
+            nn.Linear(gan_output_size, 128),
             nn.LeakyReLU(negative_slope=0.2),
-            nn.Linear(gan_noise_size, 4096),
+            nn.Linear(128, 4096),
             nn.LeakyReLU(negative_slope=0.2),
             nn.Linear(4096, 2048),
             nn.LeakyReLU(negative_slope=0.2),
@@ -109,3 +109,16 @@ class DiscriminatorFC(nn.Module):
 
     def forward(self, x):
         return self.layers(x)
+
+
+def get_models(args, n_features, device):
+    if args.architecture == 'cnn':
+        generator = GeneratorCNN(args.gan_noise_size, n_features).to(device)
+        discriminator = DiscriminatorCNN(n_features).to(device)
+    elif args.architecture == 'fc':
+        generator = GeneratorFC(args.gan_noise_size, n_features).to(device)
+        discriminator = DiscriminatorFC(n_features).to(device)
+    else:
+        raise ValueError
+
+    return generator, discriminator
