@@ -19,7 +19,7 @@ def train(generator, discriminator, parameters, train_dataset, optimizer_g, opti
     y_real = torch.ones((parameters.batch_size, 1), device=device)
     y_fake = torch.zeros((parameters.batch_size, 1), device=device)
 
-    for epoch in tqdm(range(parameters.epochs), desc=f'training'):
+    for epoch in tqdm(range(parameters.epochs), desc=f'training', position=0, leave=True):
         metric_accum = MetricsAccum()
         for batch_num, X_batch_real in enumerate(train_loader):
             if batch_num >= parameters.training_ratio:

@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 def evaluate_model(generator, experiment, test_set, batch_size, batch_num, gan_noise_size, device):
     predictions = []
-    for _ in tqdm(range(batch_num), desc='evaluation'):
+    for _ in tqdm(range(batch_num), desc='evaluation', position=0, leave=True):
         x_noise = torch.randn((batch_size, gan_noise_size)).to(device)
         predictions.append(generator(x_noise).cpu().detach().numpy())
 
