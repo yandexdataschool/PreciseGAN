@@ -1,0 +1,7 @@
+numpy
+torch
+comet-ml
+pandas
+seaborn
+matplotlib
+tqdm
