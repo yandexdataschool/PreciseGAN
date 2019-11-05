@@ -1,6 +1,5 @@
 import logging
 import math
-import pickle
 import random
 
 import pandas as pd
@@ -31,15 +30,13 @@ class DiJetDataset(Dataset):
         return len(self.items)
 
     @classmethod
-    def from_path(cls, path, scaler_path=None):
+    def from_path(cls, path, scaler=None):
         data = pd.read_csv(path, delimiter=',', names=header)
         data = data[cls.features]
         items = data.values
 
-        if scaler_path is not None:
-            with open(scaler_path, "rb") as file_scaler:
-                scaler = pickle.load(file_scaler)
-                items = scaler.transform(items)
+        if scaler is not None:
+            items = scaler.transform(items)
 
         logging.info(f'input features: {list(data.columns)}')
         logging.info(f'total number of input features: {len(data.columns)}')

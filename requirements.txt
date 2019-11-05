@@ -1,4 +1,5 @@
 numpy
+scipy
 torch
 comet-ml
 pandas

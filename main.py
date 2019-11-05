@@ -1,5 +1,6 @@
 import argparse
 import logging
+import pickle
 
 from comet_ml import Experiment
 import torch
@@ -27,8 +28,10 @@ def main_train(args):
 
     scaler_filename = "scaler.%s.pkl" % args.level
     logging.info(f'loading scaler from {scaler_filename}')
+    with open(scaler_filename, "rb") as file_scaler:
+        scaler = pickle.load(file_scaler)
 
-    dataset = DiJetDataset.from_path(args.training_filename, scaler_filename)
+    dataset = DiJetDataset.from_path(args.training_filename, scaler)
 
     n_features = len(DiJetDataset.features)
 
@@ -39,16 +42,17 @@ def main_train(args):
     optimizer_g = setup_optimizer(generator, args.learning_rate, weight_decay=0)
 
     experiment = Experiment('gflIAsawYkIJvtkFb55lOwno7', project_name="sirius-gan-tails", workspace="v3rganz")
+    experiment.log_parameters(vars(args))
 
     train_indices, val_indices = split_data(dataset, 0.15, True)
 
-    train(generator, discriminator, args, Subset(dataset, train_indices), optimizer_g, optimizer_d,
+    train(generator, discriminator, args, Subset(dataset, train_indices), optimizer_g, optimizer_d, scaler=scaler,
           test_dataset=dataset.items[val_indices], ecaluate_every=args.log_every, experiment=experiment, device=device)
 
     n_events = len(dataset)
     steps = n_events // 512
 
-    evaluate_model(generator, experiment, dataset.items[val_indices], 512, steps, args.gan_noise_size, device)
+    evaluate_model(generator, experiment, dataset.items[val_indices], 512, steps, args.gan_noise_size, device, scaler)
     experiment.end()
 
 
