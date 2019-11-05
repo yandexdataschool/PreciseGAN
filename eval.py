@@ -4,6 +4,8 @@ import torch
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
+ANGLE_IDX = 5
+
 
 def evaluate_model(generator, experiment, test_set, batch_size, batch_num, gan_noise_size, device, scaler):
     predictions = []
@@ -14,10 +16,9 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, gan_n
     predictions_np = np.concatenate(predictions)
 
     inverse_generated = scaler.inverse_transform(predictions_np)
-    test_inverse = scaler.inverse_transform(test_set)
 
-    inverse_generated = inverse_generated[:, [0, 1, 2, 3, 4, 6]]
-    test_inverse = test_inverse[:, [0, 1, 2, 3, 4, 6]]
+    inverse_generated = np.delete(inverse_generated, ANGLE_IDX, axis=1)
+    test_set = np.delete(test_set, ANGLE_IDX, axis=1)
 
     fig, ax = plt.subplots(2, 4, figsize=(20, 12))
     hist_bins = [20, 25, 30, 20, 25, 30, ]
@@ -26,10 +27,10 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, gan_n
     start_bin = [1, 0, 0, 2, 0, 0]
     chisqs = []
 
-    for i in range(6):
+    for i in range(inverse_generated.shape[1]):
         count_g, bin_widths_g = np.histogram(inverse_generated[:, i],
                                              bins=hist_bins[i], range=hist_ranges[i])
-        count_t, bin_widths_t = np.histogram(test_inverse[:, i],
+        count_t, bin_widths_t = np.histogram(test_set[:, i],
                                              bins=hist_bins[i], range=hist_ranges[i])
 
         width = (max(bin_widths_t) - min(bin_widths_t)) / hist_bins[i]
