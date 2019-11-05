@@ -1,3 +1,5 @@
+import logging
+
 from torch import nn
 
 
@@ -51,10 +53,10 @@ class GeneratorFC(nn.Module):
             nn.BatchNorm1d(128, momentum=0.99, eps=0.001),
             nn.Linear(128, 2048),
             nn.LeakyReLU(negative_slope=0.2),
-            nn.BatchNorm2d(32, momentum=0.99, eps=0.001),
+            nn.BatchNorm1d(2048, momentum=0.99, eps=0.001),
             nn.Linear(2048, 1024),
             nn.LeakyReLU(negative_slope=0.2),
-            nn.BatchNorm2d(16, momentum=0.99, eps=0.001),
+            nn.BatchNorm1d(1024, momentum=0.99, eps=0.001),
             nn.Linear(1024, gan_output_size),
             nn.Tanh()
         )
@@ -101,7 +103,6 @@ class DiscriminatorFC(nn.Module):
             nn.LeakyReLU(negative_slope=0.2),
             nn.Linear(2048, 1024),
             nn.LeakyReLU(negative_slope=0.2),
-            nn.LeakyReLU(negative_slope=0.2),
             nn.Dropout(0.2),
             nn.Linear(1024, 1),
             nn.Sigmoid()
@@ -112,6 +113,7 @@ class DiscriminatorFC(nn.Module):
 
 
 def get_models(args, n_features, device):
+    logging.info(f'using {args.architecture} architecture')
     if args.architecture == 'cnn':
         generator = GeneratorCNN(args.gan_noise_size, n_features).to(device)
         discriminator = DiscriminatorCNN(n_features).to(device)

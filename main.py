@@ -6,10 +6,22 @@ import torch
 
 from data import get_data
 from eval import evaluate_model
+from hyperparam import RandInt, rand_search, RandChoice
 from model import get_models
 from optim import setup_optimizer
 from train import train
 from util import fix_seed
+
+
+def main_random_search(args):
+    args_generators = {
+        'gan_noise_size': RandChoice([64, 128, 256]),
+        'architecture': RandChoice(['cnn', 'fc']),
+        'batch_size': RandInt(32, 512),
+        'training_ratio': RandInt(1, 10)
+    }
+
+    rand_search(main_train, args, args_generators)
 
 
 def main_train(args):
