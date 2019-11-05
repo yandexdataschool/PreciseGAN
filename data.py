@@ -1,6 +1,8 @@
 import logging
 import math
+import pickle
 import random
+from pathlib import Path
 
 import pandas as pd
 from torch.utils.data.dataset import Dataset
@@ -42,6 +44,22 @@ class DiJetDataset(Dataset):
         logging.info(f'total number of input features: {len(data.columns)}')
 
         return cls(items)
+
+    @staticmethod
+    def get_cached(path, scaler=None):
+        cached_object = str(path.name) + '_cached'
+        if Path(cached_object).exists():
+            logging.info(f'loading cached object from {cached_object}')
+            with path.open('rb') as f:
+                return pickle.load(f)
+        path.parent.mkdir(exist_ok=True)
+        dataset = DiJetDataset.from_path(str(path), scaler)
+
+        logging.info(f'saved cached object to {cached_object}')
+        with (Path(cached_object)).open(mode='wb') as f:
+            pickle.dump(dataset, f)
+
+        return dataset
 
 
 def split_data(dataset, train_split, shuffle=False):
