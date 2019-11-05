@@ -2,6 +2,7 @@ import numpy as np
 import seaborn as sns
 import torch
 from matplotlib import pyplot as plt
+
 from tqdm import tqdm
 
 
@@ -18,6 +19,6 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, gan_n
     for i in range(7):
         sns.kdeplot(predictions_np[:, i].T, color='red', alpha=0.7, label='generated', ax=ax[i // 4][i % 4])
         sns.kdeplot(test_set[:, i].T, color='blue', alpha=0.7, label='test', ax=ax[i // 4][i % 4])
-    plt.legend()
+    fig.legend()
 
     experiment.log_figure(fig)

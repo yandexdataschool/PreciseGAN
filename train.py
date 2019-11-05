@@ -5,11 +5,12 @@ from torch import nn
 from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
 
+from eval import evaluate_model
 from metrics import MetricsAccum
 
 
 def train(generator, discriminator, parameters, train_dataset, optimizer_g, optimizer_d, device, experiment,
-          scheduler_d=None, scheduler_g=None, criterion=nn.BCELoss()):
+          test_dataset=None, ecaluate_every=None, scheduler_d=None, scheduler_g=None, criterion=nn.BCELoss()):
     logging.info(f'Train for {parameters.epochs} epochs with BATCH_SIZE={parameters.batch_size} and '
                  f'TRAINING_RATIO={parameters.training_ratio}')
 
@@ -60,9 +61,15 @@ def train(generator, discriminator, parameters, train_dataset, optimizer_g, opti
         loss.backward()
         optimizer_g.step()
 
-        metrics = metric_accum.calculate()
-        if experiment is not None:  # this can be a bottleneck with small batch size, so it can be turned off
-            experiment.log_metrics(vars(metrics), epoch=epoch)
-
         if scheduler_g is not None:
             scheduler_g.step()
+
+        if ecaluate_every is not None and experiment is not None:
+            assert test_dataset is not None
+            if (1 + epoch) % ecaluate_every == 0:
+                metrics = metric_accum.calculate()
+                experiment.log_metrics(vars(metrics), epoch=epoch)
+                eval_batch_size = 512
+                eval_batch_num = len(test_dataset) // 512
+                evaluate_model(generator, experiment, test_dataset, eval_batch_size, eval_batch_num,
+                               parameters.gan_noise_size, device)

@@ -43,9 +43,9 @@ def main_train(args):
     train_indices, val_indices = split_data(dataset, 0.15, True)
 
     train(generator, discriminator, args, Subset(dataset, train_indices), optimizer_g, optimizer_d,
-          experiment=None, device=device)
+          test_dataset=dataset.items[val_indices], ecaluate_every=500, experiment=experiment, device=device)
 
-    n_events = 10 * len(dataset)
+    n_events = len(dataset)
     steps = n_events // 512
 
     evaluate_model(generator, experiment, dataset.items[val_indices], 512, steps, args.gan_noise_size, device)
