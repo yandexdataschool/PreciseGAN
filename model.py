@@ -50,10 +50,10 @@ class GeneratorFC(nn.Module):
         self.layers = nn.Sequential(
             nn.Linear(gan_noise_size, 64),
             nn.LeakyReLU(negative_slope=0.2),
-            nn.BatchNorm1d(128, momentum=0.99, eps=0.001),
+            nn.BatchNorm1d(64, momentum=0.99, eps=0.001),
             nn.Linear(64, 128),
             nn.LeakyReLU(negative_slope=0.2),
-            nn.BatchNorm1d(256, momentum=0.99, eps=0.001),
+            nn.BatchNorm1d(128, momentum=0.99, eps=0.001),
             nn.Linear(128, 64),
             nn.LeakyReLU(negative_slope=0.2),
             nn.BatchNorm1d(64, momentum=0.99, eps=0.001),
