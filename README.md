@@ -8,3 +8,5 @@ Then you should learn and dump `MinMaxScaler` with script `init_scaler.py`, and 
 with `init_data.py`
 
 Then run `main.py`
+
+Notebook usage example: `notebook_usage.ipynb`

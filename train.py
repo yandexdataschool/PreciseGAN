@@ -7,10 +7,11 @@ from tqdm import tqdm
 
 from eval import evaluate_model
 from metrics import MetricsAccum
+from util import save_model
 
 
 def train(generator, discriminator, parameters, train_dataset, optimizer_g, optimizer_d, device, experiment, scaler,
-          test_dataset=None, ecaluate_every=None, scheduler_d=None, scheduler_g=None, criterion=nn.BCELoss()):
+          save_dir, test_dataset=None, ecaluate_every=None, scheduler_d=None, scheduler_g=None, criterion=nn.BCELoss()):
     logging.info(f'Train for {parameters.epochs} epochs with BATCH_SIZE={parameters.batch_size} and '
                  f'TRAINING_RATIO={parameters.training_ratio}')
 
@@ -71,5 +72,10 @@ def train(generator, discriminator, parameters, train_dataset, optimizer_g, opti
                 experiment.log_metrics(vars(metrics), epoch=epoch)
                 eval_batch_size = 512
                 eval_batch_num = len(test_dataset) // 512
-                evaluate_model(generator, experiment, test_dataset, eval_batch_size, eval_batch_num,
-                               parameters.gan_noise_size, device, scaler)
+                evaluate_model(generator, experiment, test_dataset, eval_batch_size, eval_batch_num, parameters,
+                               device, scaler)
+
+        if (epoch + 1) % parameters.save_every == 0:
+            save_model(save_dir, generator, discriminator, optimizer_g, optimizer_d, epoch)
+
+    return epoch + 1

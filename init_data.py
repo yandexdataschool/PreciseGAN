@@ -5,22 +5,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from data import split_data
+from data import split_data, PTCL_HEADER, PTCL_FEATURES
 from util import fix_seed
-
-
-PTCL_HEADER = [
-  "eventNumber", "weight",
-  "ljet1_pt", "ljet1_eta", "ljet1_phi", "ljet1_E", "ljet1_M",
-  "ljet2_pt", "ljet2_eta", "ljet2_phi", "ljet2_E", "ljet2_M",
-  "jj_pt",    "jj_eta",    "jj_phi",    "jj_E",    "jj_M",
-  "jj_dPhi",  "jj_dEta",  "jj_dR",
-]
-
-PTCL_FEATURES = [
-    "ljet1_pt", "ljet1_eta", "ljet1_M",
-    "ljet2_pt", "ljet2_eta", "ljet2_phi", "ljet2_M"
-]
 
 
 def main(args):

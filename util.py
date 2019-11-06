@@ -5,8 +5,8 @@ import numpy as np
 import torch
 
 
-def save_model(save_dir, generator, discriminator, generator_opt, discriminator_opt):
-    model_path = save_dir / 'model'
+def save_model(save_dir, generator, discriminator, generator_opt, discriminator_opt, epoch):
+    model_path = save_dir / f'model-{epoch}'
 
     logging.info(f'save model to {str(model_path)}')
 

@@ -1,5 +1,7 @@
 import argparse
 import logging
+from datetime import datetime
+from pathlib import Path
 
 from comet_ml import Experiment
 import torch
@@ -10,7 +12,7 @@ from hyperparam import RandInt, rand_search, RandChoice
 from model import get_models
 from optim import setup_optimizer
 from train import train
-from util import fix_seed
+from util import fix_seed, save_model
 
 
 def main_random_search(args):
@@ -25,6 +27,8 @@ def main_random_search(args):
 
 
 def main_train(args):
+    now = datetime.now()
+    save_dir = Path().cwd() / f'{now:%Y%m%d-%H%M-%S}'
     fix_seed(args.seed)
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
     device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
@@ -44,15 +48,17 @@ def main_train(args):
     experiment = Experiment('gflIAsawYkIJvtkFb55lOwno7', project_name="sirius-gan-tails", workspace="v3rganz")
     experiment.log_parameters(vars(args))
 
-    train(generator, discriminator, args, dataset_train, optimizer_g, optimizer_d, scaler=scaler,
-          test_dataset=dataset_test.items[:len(dataset_test) // 100],
-          ecaluate_every=args.log_every, experiment=experiment, device=device)
+    epochs_trained = train(generator, discriminator, args, dataset_train, optimizer_g, optimizer_d, scaler=scaler,
+                           save_dir=save_dir, test_dataset=dataset_test.items[:len(dataset_test) // 10],
+                           ecaluate_every=args.log_every, experiment=experiment, device=device)
 
     n_events = len(dataset_test)
     steps = n_events // 512
 
-    evaluate_model(generator, experiment, dataset_test, 512, steps, args.gan_noise_size, device, scaler)
+    evaluate_model(generator, experiment, dataset_test, 512, steps, args, device, scaler)
     experiment.end()
+
+    save_model(save_dir, generator, discriminator, optimizer_g, optimizer_d, epochs_trained)
 
 
 if __name__ == '__main__':
@@ -68,6 +74,7 @@ if __name__ == '__main__':
     parser.add_argument('-lr', '--learning_rate', type=float, default=1e-2)
     parser.add_argument('-tr', '--training_ratio', type=int, default=1)
     parser.add_argument('-le', '--log_every', type=int, default=500)
+    parser.add_argument('-se', '--save_every', type=int, default=5000)
     parser.add_argument('-n', '--gan_noise_size', type=int, default=128)
     parser.add_argument('--seed', type=int, default=48)
     args = parser.parse_args()
