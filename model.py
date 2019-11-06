@@ -48,16 +48,16 @@ class GeneratorFC(nn.Module):
         super().__init__()
 
         self.layers = nn.Sequential(
-            nn.Linear(gan_noise_size, 128),
+            nn.Linear(gan_noise_size, 64),
             nn.LeakyReLU(negative_slope=0.2),
             nn.BatchNorm1d(128, momentum=0.99, eps=0.001),
-            nn.Linear(128, 2048),
+            nn.Linear(64, 128),
             nn.LeakyReLU(negative_slope=0.2),
-            nn.BatchNorm1d(2048, momentum=0.99, eps=0.001),
-            nn.Linear(2048, 1024),
+            nn.BatchNorm1d(256, momentum=0.99, eps=0.001),
+            nn.Linear(128, 64),
             nn.LeakyReLU(negative_slope=0.2),
-            nn.BatchNorm1d(1024, momentum=0.99, eps=0.001),
-            nn.Linear(1024, gan_output_size),
+            nn.BatchNorm1d(64, momentum=0.99, eps=0.001),
+            nn.Linear(64, gan_output_size),
             nn.Tanh()
         )
 
@@ -95,16 +95,19 @@ class DiscriminatorFC(nn.Module):
         super().__init__()
 
         self.layers = nn.Sequential(
-            nn.Linear(gan_output_size, 128),
+            nn.Linear(gan_output_size, 64),
             nn.LeakyReLU(negative_slope=0.2),
-            nn.Linear(128, 4096),
+            nn.Linear(64, 64),
             nn.LeakyReLU(negative_slope=0.2),
-            nn.Linear(4096, 2048),
+            nn.Linear(64, 128),
             nn.LeakyReLU(negative_slope=0.2),
-            nn.Linear(2048, 1024),
+            nn.Linear(128, 64),
             nn.LeakyReLU(negative_slope=0.2),
+            nn.Linear(64, 64),
+            nn.LeakyReLU(negative_slope=0.2),
+            nn.Linear(64, 32),
             nn.Dropout(0.2),
-            nn.Linear(1024, 1),
+            nn.Linear(32, 1),
             nn.Sigmoid()
         )
 
@@ -122,5 +125,10 @@ def get_models(args, n_features, device):
         discriminator = DiscriminatorFC(n_features).to(device)
     else:
         raise ValueError
+
+    learning_params = lambda module: sum(p.numel() for p in module.parameters() if p.requires_grad)
+
+    logging.info(f'generator learning parameters count: {learning_params(generator)}')
+    logging.info(f'discriminator learning parameters count: {learning_params(discriminator)}')
 
     return generator, discriminator
