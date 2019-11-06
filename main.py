@@ -7,7 +7,7 @@ from comet_ml import Experiment
 import torch
 
 from data import get_data
-from eval import evaluate_model
+from evaluation import evaluate_model
 from hyperparam import RandInt, rand_search, RandChoice
 from model import get_models
 from optim import setup_optimizer
@@ -53,9 +53,9 @@ def main_train(args):
                            ecaluate_every=args.log_every, experiment=experiment, device=device)
 
     n_events = len(dataset_test)
-    steps = n_events // 512
+    steps = n_events // args.eval_batch_size
 
-    evaluate_model(generator, experiment, dataset_test, 512, steps, args, device, scaler)
+    evaluate_model(generator, experiment, dataset_test, args.eval_batch_size, steps, args, device, scaler)
     experiment.end()
 
     save_model(save_dir, generator, discriminator, optimizer_g, optimizer_d, epochs_trained)
@@ -71,6 +71,7 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--dsid', default="mg5_dijet_ht500")
     parser.add_argument('-e', '--epochs', type=int, default=1000)
     parser.add_argument('-b', '--batch_size', type=int, default=32)
+    parser.add_argument('--eval_batch_size', type=int, default=512)
     parser.add_argument('-lr', '--learning_rate', type=float, default=1e-2)
     parser.add_argument('-tr', '--training_ratio', type=int, default=1)
     parser.add_argument('-le', '--log_every', type=int, default=500)

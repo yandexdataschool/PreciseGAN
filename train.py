@@ -5,7 +5,7 @@ from torch import nn
 from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
 
-from eval import evaluate_model
+from evaluation import evaluate_model
 from metrics import MetricsAccum
 from util import save_model
 
