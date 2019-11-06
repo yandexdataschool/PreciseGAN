@@ -57,7 +57,7 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
     experiment.log_metrics({f'pval{i}': pval for i, (chisq, pval) in enumerate(chisqs)})
 
 
-def count_jj(predictions):
+def compute_jj(predictions):
     pt_1 = predictions[:, 0]
     eta_1 = predictions[:, 1]
     M_1 = predictions[:, 2]
