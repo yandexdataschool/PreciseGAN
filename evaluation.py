@@ -55,3 +55,34 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
     # experiment.log_figure(figure_name='distributions', figure=fig)
     experiment.log_metrics({f'chisq{i}': chisq for i, (chisq, pval) in enumerate(chisqs)})
     experiment.log_metrics({f'pval{i}': pval for i, (chisq, pval) in enumerate(chisqs)})
+
+
+def compute_jj(predictions):
+    pt_1 = predictions[:, 0]
+    eta_1 = predictions[:, 1]
+    M_1 = predictions[:, 2]
+    pt_2 = predictions[:, 3]
+    eta_2 = predictions[:, 4]
+    phi = predictions[:, 5]
+    M_2 = predictions[:, 6]
+
+    x1 = pt_1
+    y1 = 0
+    z1 = pt_1 * np.sinh(eta_1)
+    t1 = np.sqrt(np.square(x1) + np.square(y1) + np.square(z1) + np.square(M_1))
+
+    x2 = pt_2 * np.cos(phi)
+    y2 = pt_2 * np.sin(phi)
+    z2 = pt_2 * np.sinh(eta_2)
+    t2 = np.sqrt(np.square(x2) + np.square(y2) + np.square(z2) + np.square(M_2))
+
+    x3 = x1 + x2
+    y3 = y1 + y2
+    z3 = z1 + z2
+    t3 = t1 + t2
+
+    jj_M = np.sqrt(np.square(t3) - (np.square(x3) + np.square(y3) + np.square(z3)))
+    jj_pt = np.sqrt(np.square(x3) + np.square(y3))
+    jj_eta = np.arcsinh(z3 / jj_pt)
+
+    return np.array((jj_pt, jj_eta, jj_M))
