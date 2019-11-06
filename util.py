@@ -6,6 +6,7 @@ import torch
 
 
 def save_model(save_dir, generator, discriminator, generator_opt, discriminator_opt, epoch):
+    save_dir.mkdir(exist_ok=True, parents=True)
     model_path = save_dir / f'model-{epoch}'
 
     logging.info(f'save model to {str(model_path)}')
