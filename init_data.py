@@ -4,8 +4,9 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
-from data import split_data, PTCL_HEADER, PTCL_FEATURES
+from data import PTCL_HEADER, PTCL_FEATURES
 from util import fix_seed
 
 
@@ -24,7 +25,8 @@ def main(args):
     logging.info(f'input features: {list(data.columns)}')
     logging.info(f'total number of input features: {len(data.columns)}')
 
-    train_indices, test_indices = split_data(items, args.train_split, args.random_split)
+    train_set, test_set = train_test_split(items, random_state=args.seed, shuffle=args.random_split,
+                                           train_size=args.train_split)
 
     source_path = Path(args.csv_path)
     parent_path = source_path.parent
@@ -35,8 +37,8 @@ def main(args):
 
     logging.info(f'saving train/test files to {str(train_file)} and {str(test_file)}...')
 
-    np.save(train_file, items[train_indices])
-    np.save(test_file, items[test_indices])
+    np.save(train_file, train_set)
+    np.save(test_file, test_set)
 
 
 if __name__ == '__main__':

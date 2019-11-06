@@ -1,3 +1,4 @@
+import argparse
 import pickle
 from pathlib import Path
 
@@ -7,11 +8,9 @@ from sklearn.preprocessing import MinMaxScaler
 from data import PTCL_HEADER, PTCL_FEATURES
 
 
-def main():
-    infilename = "csv/mg5_dijet_ht500.ptcl.pt250.nominal.csv"
-    level = infilename.split("/")[-1].split('.')[1]
-    data = pd.read_csv(infilename, delimiter=',', names=PTCL_HEADER)[PTCL_FEATURES]
-    data.dropna(inplace=True)
+def main(args):
+    level = args.csv_path.split("/")[-1].split('.')[1]
+    data = pd.read_csv(args.csv_path, delimiter=',', names=PTCL_HEADER, usecols=PTCL_FEATURES)
     X_train = data.values
 
     scaler = MinMaxScaler((-1, 1))
@@ -24,4 +23,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--csv_path', type=str, required=True)
+    args = parser.parse_args()
+    main(args)

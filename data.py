@@ -28,17 +28,6 @@ class DiJetDataset(Dataset):
         return cls(items)
 
 
-def split_data(dataset, train_split, shuffle=False):
-    dataset_size = len(dataset)
-    indices = list(range(dataset_size))
-    split = int(math.floor(train_split * dataset_size))
-    if shuffle:
-        random.shuffle(indices)
-    train_indices, val_indices = indices[:split], indices[split:]
-
-    return train_indices, val_indices
-
-
 def get_data(args):
     if args.training_filename is None:
         args.training_filename = "csv/%s.%s.%s.%s.csv" % (args.dsid, args.level, args.preselection, args.systematic)
