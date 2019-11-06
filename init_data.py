@@ -18,8 +18,7 @@ def main(args):
         args.csv_path = "csv/%s.%s.%s.%s.csv" % (args.dsid, args.level, args.preselection, args.systematic)
     logging.info(f'training file: {args.csv_path}')
 
-    data = pd.read_csv(args.csv_path, delimiter=',', names=PTCL_HEADER)
-    data = data[PTCL_FEATURES]
+    data = pd.read_csv(args.csv_path, delimiter=',', names=PTCL_HEADER, usecols=PTCL_FEATURES)
     items = data.values
 
     logging.info(f'input features: {list(data.columns)}')
