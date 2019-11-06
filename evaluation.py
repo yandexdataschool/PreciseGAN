@@ -30,6 +30,7 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
                    (0, 300)]
     start_bin = [1, 0, 0, 2, 0, 0]
     chisqs = []
+    ks_tests = []
 
     for i in range(inverse_generated.shape[1]):
         count_g, bin_widths_g = np.histogram(inverse_generated[:, i],
@@ -48,13 +49,19 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
         chi2 = stats.chisquare(count_t[start_bin[i]:], (count_g)[start_bin[i]:])
         chisqs.append(chi2)
 
+        ks = stats.ks_2samp(inverse_generated[:, i], test_set[:, i])
+        ks_tests.append(ks)
+
     fig.title = f'architecture: {parametres.architecture}'
     fig.show()
 
     # FIXME: not working
     # experiment.log_figure(figure_name='distributions', figure=fig)
-    experiment.log_metrics({f'chisq{i}': chisq for i, (chisq, pval) in enumerate(chisqs)})
-    experiment.log_metrics({f'pval{i}': pval for i, (chisq, pval) in enumerate(chisqs)})
+    experiment.log_metrics({f'chisq_st_f{i}': chisq for i, (chisq, pval) in enumerate(chisqs)})
+    experiment.log_metrics({f'chisq_pval_f{i}': pval for i, (chisq, pval) in enumerate(chisqs)})
+
+    experiment.log_metrics({f'ks_st_f{i}': ks for i, (ks, pval) in enumerate(ks_tests)})
+    experiment.log_metrics({f'ks_pval_f{i}': pval for i, (chisq, pval) in enumerate(ks_tests)})
 
 
 def compute_jj(predictions):
