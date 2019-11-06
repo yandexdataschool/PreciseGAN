@@ -29,26 +29,13 @@ class DiJetDataset(Dataset):
 
 
 def get_data(args):
-    if args.training_filename is None:
-        args.training_filename = "csv/%s.%s.%s.%s.csv" % (args.dsid, args.level, args.preselection, args.systematic)
-        logging.info(f'training file: {args.training_filename}')
-    else:
-        args.systematic = args.training_filename.split("/")[-1].split('.')[-2]
-
-    scaler_filename = "scaler.%s.pkl" % args.level
+    scaler_filename = "scaler.%s.pkl" % args.level if args.scaler_dump is None else args.scaler_dump
     logging.info(f'loading scaler from {scaler_filename}')
     with open(scaler_filename, "rb") as file_scaler:
         scaler = pickle.load(file_scaler)
 
-    source_path = Path(args.training_filename)
-    parent_path = source_path.parent
-    file_name = source_path.stem
-
-    train_file = parent_path / f'train_{file_name}.npy'
-    test_file = parent_path / f'test_{file_name}.npy'
-
-    dataset_train = DiJetDataset.from_path(train_file, scaler)
-    dataset_test = DiJetDataset.from_path(test_file)
+    dataset_train = DiJetDataset.from_path(args.train_data, scaler)
+    dataset_test = DiJetDataset.from_path(args.test_data)
 
     return dataset_train, dataset_test, scaler
 

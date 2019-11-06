@@ -36,7 +36,6 @@ def main_train(args):
     dataset_train, dataset_test, scaler = get_data(args)
 
     logging.info(f'training level: {args.level}')
-    logging.info(f'training systematic: {args.systematic}')
 
     n_features = dataset_train.items.shape[1]
 
@@ -63,12 +62,11 @@ def main_train(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--training_filename')
+    parser.add_argument('-i', '--train_data', required=True)
+    parser.add_argument('-i', '--test_data', required=True)
+    parser.add_argument('-i', '--scaler_dump')
     parser.add_argument('-a', '--architecture', default='cnn', choices={'cnn', 'fc'})
     parser.add_argument('-l', '--level', default="ptcl")
-    parser.add_argument('-p', '--preselection', default="pt250")
-    parser.add_argument('-s', '--systematic', default="nominal")
-    parser.add_argument('-d', '--dsid', default="mg5_dijet_ht500")
     parser.add_argument('-e', '--epochs', type=int, default=1000)
     parser.add_argument('-b', '--batch_size', type=int, default=32)
     parser.add_argument('--eval_batch_size', type=int, default=512)
