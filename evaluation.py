@@ -66,7 +66,7 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
         plt.text(0.9, 0.9, f'χ2/NDF: {round(chi2, 1)}', horizontalalignment='right',
                  verticalalignment='top', transform=ax[i // 3][i % 3].transAxes)
 
-        plt.text(0.9, 0.85, f'paper χ2/NDF: {paper_chi[i]}', horizontalalignment='right', fontdict={'color': 'red'},
+        plt.text(0.9, 0.875, f'paper χ2/NDF: {paper_chi[i]}', horizontalalignment='right', fontdict={'color': 'red'},
                  verticalalignment='top', transform=ax[i // 3][i % 3].transAxes)
 
     fig.title = f'architecture: {parametres.architecture}'
