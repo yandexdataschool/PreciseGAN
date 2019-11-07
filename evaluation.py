@@ -29,7 +29,8 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
     hist_ranges = [(200, 800), (-2.5, 2.5), (0, 300), (200, 600), (-2.5, 2.5),
                    (0, 300)]
     start_bin = [1, 0, 0, 2, 0, 0]
-    paper_chi = [794.7, 86.7, 525.8, 1010.8, 21.6, 1248.1]
+    paper_chi = [794.7, 86.7, 525.8, 1010.8, 21.6, 1248.1] if parametres.level == 'ptcl' else [164.9, 200.8, 2467.9,
+                                                                                               1388.7, 174.3, 485.1]
     chisqs = []
     ks_tests = []
 
