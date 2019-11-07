@@ -61,10 +61,10 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
 
     fig.title = f'architecture: {parametres.architecture}'
     fig.legend()
-    fig.show()
 
-    # FIXME: not working
-    # experiment.log_figure(figure_name='distributions', figure=fig)
+    experiment.log_figure(figure_name='distributions', figure=fig)
+    fig.clear()
+    plt.close(fig)
     experiment.log_metrics({f'chisq_st_f{i}': chisq for i, (chisq, pval) in enumerate(chisqs)})
     experiment.log_metrics({f'chisq_pval_f{i}': pval for i, (chisq, pval) in enumerate(chisqs)})
 
