@@ -62,9 +62,9 @@ def main_train(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--train_data', required=True)
-    parser.add_argument('-i', '--test_data', required=True)
-    parser.add_argument('-i', '--scaler_dump')
+    parser.add_argument('--train_data', required=True)
+    parser.add_argument('--test_data', required=True)
+    parser.add_argument('--scaler_dump')
     parser.add_argument('-a', '--architecture', default='cnn', choices={'cnn', 'fc'})
     parser.add_argument('-l', '--level', default="ptcl")
     parser.add_argument('-e', '--iterations', type=int, default=1000)
