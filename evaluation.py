@@ -60,7 +60,6 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
                  verticalalignment='top', transform=ax[i // 3][i % 3].transAxes)
 
     fig.title = f'architecture: {parametres.architecture}'
-    fig.legend()
 
     experiment.log_figure(figure_name='distributions', figure=fig, step=step)
     fig.clear()
