@@ -12,7 +12,7 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
                    plot_tail=False):
     features = PTCL_FEATURES.copy()
     del features[ANGLE_IDX]
-    features += ['jj_pt', 'jj_eta', 'jj_M']
+    features += DIJET_SYSTEM_FEATURES
     predictions = []
     for _ in tqdm(range(batch_num), desc='evaluation', position=0, leave=True):
         x_noise = torch.randn((batch_size, parametres.gan_noise_size), device=device)

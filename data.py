@@ -51,3 +51,6 @@ PTCL_FEATURES = [
     "Leading large-R jet p_t", "Leading large-R jet η", "Leading large-R jet m",
     "2nd leading large-R jet p_t", "2nd leading large-R jet η", "ljet2_phi", "2nd leading large-R jet m"
 ]
+DIJET_SYSTEM_FEATURES = [
+    "Dijet system pt", "Dijet system η", "Dijet system m"
+]
