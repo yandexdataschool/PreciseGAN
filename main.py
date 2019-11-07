@@ -41,8 +41,8 @@ def main_train(args):
 
     generator, discriminator = get_models(args, n_features, device)
 
-    optimizer_d = setup_optimizer(discriminator, args.learning_rate, weight_decay=0)
-    optimizer_g = setup_optimizer(generator, args.learning_rate, weight_decay=0)
+    optimizer_d = setup_optimizer(discriminator, args.learning_rate, weight_decay=0, optim_name=args.optim)
+    optimizer_g = setup_optimizer(generator, args.learning_rate, weight_decay=0, optim_name=args.optim)
 
     experiment = Experiment(args.comet_api_key, project_name=args.comet_project_name, workspace=args.comet_workspace)
     experiment.log_parameters(vars(args))
@@ -66,6 +66,7 @@ if __name__ == '__main__':
     parser.add_argument('--test_data', required=True)
     parser.add_argument('--scaler_dump')
     parser.add_argument('-a', '--architecture', default='cnn', choices={'cnn', 'fc'})
+    parser.add_argument('-o', '--optim', default='sgd', choices={'sgd', 'adam'})
     parser.add_argument('-l', '--level', default="ptcl")
     parser.add_argument('-e', '--iterations', type=int, default=1000)
     parser.add_argument('-b', '--batch_size', type=int, default=32)
