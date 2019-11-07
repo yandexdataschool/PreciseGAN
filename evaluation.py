@@ -13,7 +13,7 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
     del features[ANGLE_IDX]
     predictions = []
     for _ in tqdm(range(batch_num), desc='evaluation', position=0, leave=True):
-        x_noise = torch.randn((batch_size, parametres.gan_noise_size)).to(device)
+        x_noise = torch.randn((batch_size, parametres.gan_noise_size), device=device)
         predictions.append(generator(x_noise).cpu().detach().numpy())
 
     predictions_np = np.concatenate(predictions)
@@ -61,10 +61,10 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
 
     fig.title = f'architecture: {parametres.architecture}'
     fig.legend()
-    fig.show()
 
-    # FIXME: not working
-    # experiment.log_figure(figure_name='distributions', figure=fig)
+    experiment.log_figure(figure_name='distributions', figure=fig)
+    fig.clear()
+    plt.close(fig)
     experiment.log_metrics({f'chisq_st_f{i}': chisq for i, (chisq, pval) in enumerate(chisqs)})
     experiment.log_metrics({f'chisq_pval_f{i}': pval for i, (chisq, pval) in enumerate(chisqs)})
 

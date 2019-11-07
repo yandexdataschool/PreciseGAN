@@ -44,12 +44,12 @@ def main_train(args):
     optimizer_d = setup_optimizer(discriminator, args.learning_rate, weight_decay=0)
     optimizer_g = setup_optimizer(generator, args.learning_rate, weight_decay=0)
 
-    experiment = Experiment('gflIAsawYkIJvtkFb55lOwno7', project_name="sirius-gan-tails", workspace="v3rganz")
+    experiment = Experiment(args.comet_api_key, project_name=args.comet_project_name, workspace=args.comet_workspace)
     experiment.log_parameters(vars(args))
 
-    epochs_trained = train(generator, discriminator, args, dataset_train, optimizer_g, optimizer_d, scaler=scaler,
+    iterations_total = train(generator, discriminator, args, dataset_train, optimizer_g, optimizer_d, scaler=scaler,
                            save_dir=save_dir, test_dataset=dataset_test.items[:len(dataset_test) // 10],
-                           ecaluate_every=args.log_every, experiment=experiment, device=device)
+                           experiment=experiment, device=device)
 
     n_events = len(dataset_test)
     steps = n_events // args.eval_batch_size
@@ -57,7 +57,7 @@ def main_train(args):
     evaluate_model(generator, experiment, dataset_test, args.eval_batch_size, steps, args, device, scaler)
     experiment.end()
 
-    save_model(save_dir, generator, discriminator, optimizer_g, optimizer_d, epochs_trained)
+    save_model(save_dir, generator, discriminator, optimizer_g, optimizer_d, iterations_total)
 
 
 if __name__ == '__main__':
@@ -67,7 +67,7 @@ if __name__ == '__main__':
     parser.add_argument('-i', '--scaler_dump')
     parser.add_argument('-a', '--architecture', default='cnn', choices={'cnn', 'fc'})
     parser.add_argument('-l', '--level', default="ptcl")
-    parser.add_argument('-e', '--epochs', type=int, default=1000)
+    parser.add_argument('-e', '--iterations', type=int, default=1000)
     parser.add_argument('-b', '--batch_size', type=int, default=32)
     parser.add_argument('--eval_batch_size', type=int, default=512)
     parser.add_argument('-lr', '--learning_rate', type=float, default=1e-2)
@@ -76,6 +76,9 @@ if __name__ == '__main__':
     parser.add_argument('-se', '--save_every', type=int, default=5000)
     parser.add_argument('-n', '--gan_noise_size', type=int, default=128)
     parser.add_argument('--seed', type=int, default=48)
+    parser.add_argument('--comet_api_key', type=str, required=True)
+    parser.add_argument('--comet_project_name', type=str, required=True)
+    parser.add_argument('--comet_workspace', type=str, required=True)
     args = parser.parse_args()
 
     main_train(args)
