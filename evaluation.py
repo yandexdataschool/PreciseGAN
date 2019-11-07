@@ -29,7 +29,7 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
     hist_ranges = [(200, 800), (-2.5, 2.5), (0, 300), (200, 600), (-2.5, 2.5),
                    (0, 300)]
     start_bin = [1, 0, 0, 2, 0, 0]
-    article_chi = [794.7, 86.7, 525.8, 1010.8, 21.6, 1248.1]
+    paper_chi = [794.7, 86.7, 525.8, 1010.8, 21.6, 1248.1]
     chisqs = []
     ks_tests = []
 
@@ -53,10 +53,10 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
         ks = stats.ks_2samp(inverse_generated[:, i], test_set[:, i])
         ks_tests.append(ks)
 
-        plt.text(0.9, 0.9, round(chi2, 1), horizontalalignment='right',
+        plt.text(0.9, 0.9, f'χ2/NDF: {round(chi2, 1)}', horizontalalignment='right',
                  verticalalignment='top', transform=ax[i // 3][i % 3].transAxes)
 
-        plt.text(0.9, 0.85, article_chi[i], horizontalalignment='right', fontdict={'color': 'red'},
+        plt.text(0.9, 0.85, f'paper χ2/NDF: {paper_chi[i]}', horizontalalignment='right', fontdict={'color': 'red'},
                  verticalalignment='top', transform=ax[i // 3][i % 3].transAxes)
 
     fig.title = f'architecture: {parametres.architecture}'
