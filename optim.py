@@ -12,7 +12,7 @@ def setup_optimizer(model, lr, weight_decay, args):
 
     if args.optim == 'adam':
         optimizer = Adam(optimizer_grouped_parameters, lr=lr, betas=(args.adam_beta_1, args.adam_beta_2))
-    elif args.optim == 'adam':
+    elif args.optim == 'sgd':
         optimizer = SGD(optimizer_grouped_parameters, lr=lr)
     else:
         raise ValueError
