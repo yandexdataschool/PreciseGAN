@@ -49,7 +49,7 @@ def train(generator, discriminator, parameters, train_dataset, optimizer_g, opti
 
             X_batch_real = X_batch_real.to(device)
 
-            X_noise = torch.randn((parameters.batch_size, parameters.gan_noise_size), device=device)
+            X_noise = torch.randn((batch_size, parameters.gan_noise_size), device=device)
             X_batch_fake = generator(X_noise).detach()
 
             predict = discriminator(X_batch_real.float())

@@ -46,7 +46,6 @@ def main_train(args):
 
     experiment = Experiment(args.comet_api_key, project_name=args.comet_project_name, workspace=args.comet_workspace)
     experiment.log_parameters(vars(args))
-
     iterations_total = train(generator, discriminator, args, dataset_train, optimizer_g, optimizer_d, scaler=scaler,
                            save_dir=save_dir, test_dataset=dataset_test.items[:len(dataset_test) // 10],
                            experiment=experiment, device=device)
@@ -83,6 +82,7 @@ if __name__ == '__main__':
     parser.add_argument('--comet_api_key', type=str, required=True)
     parser.add_argument('--comet_project_name', type=str, required=True)
     parser.add_argument('--comet_workspace', type=str, required=True)
+    parser.add_argument('-t', '--task', default='integral', choices={'integral', 'tail'})
     args = parser.parse_args()
 
     main_train(args)
