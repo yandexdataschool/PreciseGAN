@@ -73,11 +73,12 @@ def train(generator, discriminator, parameters, train_dataset, optimizer_g, opti
             if scheduler_d is not None:
                 scheduler_d.step()
 
-        if experiment is not None and test_dataset is not None:
-            metrics = metric_accum.calculate()
-            experiment.log_metrics(vars(metrics), epoch=epoch)
-            eval_batch_num = len(test_dataset) // parameters.eval_batch_size
-            evaluate_model(generator, experiment, test_dataset, parameters.eval_batch_size, eval_batch_num, parameters,
-                           device, scaler)
+            if experiment is not None and parameters.log_every % iterations_total == 0:
+                assert test_dataset is not None
+                metrics = metric_accum.calculate()
+                experiment.log_metrics(vars(metrics), epoch=epoch)
+                eval_batch_num = len(test_dataset) // parameters.eval_batch_size
+                evaluate_model(generator, experiment, test_dataset, parameters.eval_batch_size, eval_batch_num, parameters,
+                               device, scaler)
 
     return iterations_total
