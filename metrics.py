@@ -1,6 +1,7 @@
 class MetricsAccum:
     def __init__(self):
         self.num_batches = 0
+        self.num_batches_g = 0
         self.loss = 0
         self.hits_true = 0
         self.total_true = 0
@@ -17,14 +18,15 @@ class MetricsAccum:
         self.total_fake += (batch_label == 0).sum().item()
 
     def gen_accum(self, loss):
-        self.gen_loss = loss
+        self.num_batches_g += 1
+        self.gen_loss += loss
 
     def calculate(self):
         d_loss = self.loss / self.num_batches
         d_accuracy_true = self.hits_true / self.total_true
         d_accuracy_fake = self.hits_fake / self.total_fake
         d_accuracy = (self.hits_true + self.hits_fake) / (self.total_true + self.total_fake)
-        g_loss = self.gen_loss
+        g_loss = self.gen_loss / self.num_batches_g
         return Metrics(d_loss, d_accuracy_true, d_accuracy_fake, d_accuracy, g_loss)
 
 
