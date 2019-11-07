@@ -18,9 +18,6 @@ def train(generator, discriminator, parameters, train_dataset, optimizer_g, opti
 
     train_loader = DataLoader(dataset=train_dataset, batch_size=parameters.batch_size)
 
-    y_real = torch.ones((parameters.batch_size, 1), device=device)
-    y_fake = torch.zeros((parameters.batch_size, 1), device=device)
-
     epochs_num = int(math.ceil(parameters.iterations / len(train_loader)))
     iterations_total = 0
 
@@ -28,6 +25,8 @@ def train(generator, discriminator, parameters, train_dataset, optimizer_g, opti
         metric_accum = MetricsAccum()
         for batch_num, X_batch_real in enumerate(tqdm(train_loader, desc=f'epoch {epoch}', position=0, leave=True)):
             batch_size = X_batch_real.size(0)
+            y_real = torch.ones((batch_size, 1), device=device)
+            y_fake = torch.zeros((batch_size, 1), device=device)
             if (iterations_total + 1) % parameters.save_every == 0:
                 save_model(save_dir, generator, discriminator, optimizer_g, optimizer_d, iterations_total)
             if iterations_total > parameters.iterations:
