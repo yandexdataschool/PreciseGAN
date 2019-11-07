@@ -36,9 +36,9 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
 
     for i in range(inverse_generated.shape[1]):
         count_g, bin_widths_g = np.histogram(inverse_generated[:, i],
-                                             bins=hist_bins[i], range=hist_ranges[i])
+                                             bins=hist_bins[i], range=hist_ranges[i], density=True)
         count_t, bin_widths_t = np.histogram(test_set[:, i],
-                                             bins=hist_bins[i], range=hist_ranges[i])
+                                             bins=hist_bins[i], range=hist_ranges[i], density=True)
 
         width = (max(bin_widths_t) - min(bin_widths_t)) / hist_bins[i]
 
