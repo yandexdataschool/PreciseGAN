@@ -46,7 +46,7 @@ def main_train(args):
 
     experiment = Experiment(args.comet_api_key, project_name=args.comet_project_name, workspace=args.comet_workspace)
     experiment.log_parameters(vars(args))
-    plot_tail = args.tail == 'tail'
+    plot_tail = args.task == 'tail'
     iterations_total = train(generator, discriminator, args, dataset_train, optimizer_g, optimizer_d, scaler=scaler,
                            save_dir=save_dir, test_dataset=dataset_test.items[:len(dataset_test) // 10],
                            experiment=experiment, device=device, plot_tail=plot_tail)
