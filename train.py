@@ -27,13 +27,14 @@ def train(generator, discriminator, parameters, train_dataset, optimizer_g, opti
     for epoch in range(epochs_num):
         metric_accum = MetricsAccum()
         for batch_num, X_batch_real in enumerate(tqdm(train_loader, desc=f'epoch {epoch}', position=0, leave=True)):
+            batch_size = X_batch_real.size(0)
             if (iterations_total + 1) % parameters.save_every == 0:
                 save_model(save_dir, generator, discriminator, optimizer_g, optimizer_d, iterations_total)
             if iterations_total > parameters.iterations:
                 break
             iterations_total += 1
             if batch_num % parameters.training_ratio == 0:
-                X_noise = torch.randn((parameters.batch_size, parameters.gan_noise_size), device=device)
+                X_noise = torch.randn((batch_size, parameters.gan_noise_size), device=device)
 
                 predict = discriminator(generator(X_noise.cuda()))
                 loss = criterion(predict, y_real)
