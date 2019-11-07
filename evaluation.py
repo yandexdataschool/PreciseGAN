@@ -23,12 +23,13 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
     inverse_generated = np.delete(inverse_generated, ANGLE_IDX, axis=1)
     test_set = np.delete(test_set, ANGLE_IDX, axis=1)
 
-    fig, ax = plt.subplots(2, 4, figsize=(16, 8))
+    fig, ax = plt.subplots(2, 3, figsize=(16, 8))
 
     hist_bins = [20, 25, 30, 20, 25, 30, ]
     hist_ranges = [(200, 800), (-2.5, 2.5), (0, 300), (200, 600), (-2.5, 2.5),
                    (0, 300)]
     start_bin = [1, 0, 0, 2, 0, 0]
+    article_chi = [794.7, 86.7, 525.8, 1010.8, 21.6, 1248.1]
     chisqs = []
     ks_tests = []
 
@@ -40,17 +41,23 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
 
         width = (max(bin_widths_t) - min(bin_widths_t)) / hist_bins[i]
 
-        ax[i // 4][i % 4].bar(bin_widths_g[:-1], count_g, width=width)
-        ax[i // 4][i % 4].label = features[i]
-        ax[i // 4][i % 4].bar(bin_widths_t[:-1], count_t, width=width, alpha=0.5)
+        ax[i // 3][i % 3].bar(bin_widths_g[:-1], count_g, width=width)
+        ax[i // 3][i % 3].label = features[i]
+        ax[i // 3][i % 3].bar(bin_widths_t[:-1], count_t, width=width, alpha=0.5)
 
         plt.xlim(min(bin_widths_t), max(bin_widths_t))
 
-        chi2 = stats.chisquare(count_t[start_bin[i]:], (count_g)[start_bin[i]:])
+        chi2 = stats.chisquare(count_t[start_bin[i]:], (count_g)[start_bin[i]:])[0] / (hist_bins[i] - 1)
         chisqs.append(chi2)
 
         ks = stats.ks_2samp(inverse_generated[:, i], test_set[:, i])
         ks_tests.append(ks)
+
+        plt.text(0.9, 0.9, round(chi2, 1), horizontalalignment='right',
+                 verticalalignment='top', transform=ax[i // 3][i % 3].transAxes)
+
+        plt.text(0.9, 0.85, article_chi[i], horizontalalignment='right', fontdict={'color': 'red'},
+                 verticalalignment='top', transform=ax[i // 3][i % 3].transAxes)
 
     fig.title = f'architecture: {parametres.architecture}'
     fig.show()
