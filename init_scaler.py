@@ -10,7 +10,12 @@ from data import PTCL_HEADER, PTCL_FEATURES
 
 def main(args):
     level = args.csv_path.split("/")[-1].split('.')[1]
-    data = pd.read_csv(args.csv_path, delimiter=',', names=PTCL_HEADER, usecols=PTCL_FEATURES)
+    data = pd.read_csv(args.csv_path, delimiter=',', names=PTCL_HEADER)
+
+    if (args.task == 'tail'):
+        data = data[data['jj_M'] > 1500]
+
+    data = data[PTCL_FEATURES]
     X_train = data.values
 
     scaler = MinMaxScaler((-1, 1))
@@ -25,5 +30,6 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--csv_path', type=str, required=True)
+    parser.add_argument('-t', '--task', default='integral', choices={'integral', 'tail'})
     args = parser.parse_args()
     main(args)

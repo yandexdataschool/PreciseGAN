@@ -12,7 +12,7 @@ from util import save_model
 
 
 def train(generator, discriminator, parameters, train_dataset, optimizer_g, optimizer_d, device, experiment, scaler,
-          save_dir, test_dataset=None, scheduler_d=None, scheduler_g=None, criterion=nn.BCELoss()):
+          save_dir, test_dataset=None, scheduler_d=None, scheduler_g=None, criterion=nn.BCELoss(), plot_tail = False):
     logging.info(f'Train for {parameters.iterations} iterations with BATCH_SIZE={parameters.batch_size} and '
                  f'TRAINING_RATIO={parameters.training_ratio}')
 
@@ -79,6 +79,6 @@ def train(generator, discriminator, parameters, train_dataset, optimizer_g, opti
                 experiment.log_metrics(vars(metrics), epoch=epoch)
                 eval_batch_num = len(test_dataset) // parameters.eval_batch_size
                 evaluate_model(generator, experiment, test_dataset, parameters.eval_batch_size, eval_batch_num, parameters,
-                               device, scaler, iterations_total)
+                               device, scaler, iterations_total, plot_tail)
 
     return iterations_total

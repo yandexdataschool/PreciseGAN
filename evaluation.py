@@ -8,9 +8,11 @@ from data import PTCL_FEATURES
 ANGLE_IDX = 5
 
 
-def evaluate_model(generator, experiment, test_set, batch_size, batch_num, parametres, device, scaler, step):
+def evaluate_model(generator, experiment, test_set, batch_size, batch_num, parametres, device, scaler, step,
+                   plot_tail=False):
     features = PTCL_FEATURES.copy()
     del features[ANGLE_IDX]
+    features += ['jj_pt', 'jj_eta', 'jj_M']
     predictions = []
     for _ in tqdm(range(batch_num), desc='evaluation', position=0, leave=True):
         x_noise = torch.randn((batch_size, parametres.gan_noise_size), device=device)
@@ -20,17 +22,23 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
 
     inverse_generated = scaler.inverse_transform(predictions_np)
 
+    jj_M_gan = compute_jj(inverse_generated)
+    jj_M_test = compute_jj(test_set)
+
     inverse_generated = np.delete(inverse_generated, ANGLE_IDX, axis=1)
     test_set = np.delete(test_set, ANGLE_IDX, axis=1)
 
-    fig, ax = plt.subplots(2, 3, figsize=(16, 8))
+    inverse_generated = np.concatenate((inverse_generated, jj_M_gan), 1)
+    test_set = np.concatenate((test_set, jj_M_test), 1)
 
-    hist_bins = [20, 25, 30, 20, 25, 30, ]
+    fig, ax = plt.subplots(3, 3, figsize=(16, 8))
+
+    hist_bins = [20, 25, 30, 20, 25, 30, 15, 30, 20]
     hist_ranges = [(200, 800), (-2.5, 2.5), (0, 300), (200, 600), (-2.5, 2.5),
-                   (0, 300)]
-    start_bin = [1, 0, 0, 2, 0, 0]
-    paper_chi = [794.7, 86.7, 525.8, 1010.8, 21.6, 1248.1] if parametres.level == 'ptcl' else [164.9, 200.8, 2467.9,
-                                                                                               1388.7, 174.3, 485.1]
+                   (0, 300), (0, 300), (-6, 6), (0, 2000)]
+    start_bin = [1, 0, 0, 2, 0, 0, 0, 0, 5]
+    paper_chi = [794.7, 86.7, 525.8, 1010.8, 21.6, 1248.1, 855.5, 104.2, 906.9] if parametres.level == 'ptcl' \
+        else [164.9, 200.8, 2467.9, 1388.7, 174.3, 485.1, 1849.7, 1009.0, 76.9]
     chisqs = []
     ks_tests = []
 
@@ -49,7 +57,7 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
 
         plt.xlim(min(bin_widths_t), max(bin_widths_t))
 
-        chi2 = stats.chisquare(count_t[start_bin[i]:], (count_g)[start_bin[i]:])[0] / (hist_bins[i] - 1)
+        chi2 = stats.chisquare(count_t[start_bin[i]:], (count_g)[start_bin[i]:])[0] / (hist_bins[i]- start_bin[i] - 1)
         chisqs.append(chi2)
 
         ks = stats.ks_2samp(inverse_generated[:, i], test_set[:, i])
@@ -70,6 +78,67 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
 
     experiment.log_metrics({f'ks_st_f{i}': ks for i, (ks, pval) in enumerate(ks_tests)}, step=step)
     experiment.log_metrics({f'ks_pval_f{i}': pval for i, (chisq, pval) in enumerate(ks_tests)}, step=step)
+
+    if (plot_tail):
+         fig_tail_chi, ax = plt.subplots(1, 2, figsize=(20, 8))
+         n_bins_chi = 55
+         article_chi_tail = 1.0
+         chisqs_tail = []
+         range_chi = [2500, 8000]
+         count_g, bin_widths_g = np.histogram(jj_M_gan[:,2], bins = n_bins_chi, range = range_chi)
+         count_t, bin_widths_t = np.histogram(jj_M_test[:, 2], bins = n_bins_chi, range = range_chi)
+
+         chi2_tail = stats.chisquare(count_t, count_g)[0] / (n_bins_chi - 1)
+         chisqs_tail.append(chi2_tail)
+
+         ax[0].set_title('Linear hist')
+         ax[0].hist(jj_M_gan[:,2], bins=n_bins_chi, range= range_chi)
+         ax[0].hist(jj_M_test[:,2], bins=n_bins_chi, range= range_chi, alpha=0.5)
+         ax[1].set_title('Log hist')
+         ax[1].hist(jj_M_gan[:,2], bins=n_bins_chi, range=range_chi, log=True)
+         ax[1].hist(jj_M_test[:,2], bins=n_bins_chi, range=range_chi, log=True, alpha=0.5)
+
+         plt.text(0.9, 0.9, round(chi2_tail, 1), horizontalalignment='right',
+                  verticalalignment='top', transform=ax[0].transAxes)
+
+         plt.text(0.9, 0.875, article_chi_tail, horizontalalignment='right', fontdict={'color': 'red'},
+                  verticalalignment='top', transform=ax[0].transAxes)
+
+         plt.text(0.9, 0.9, round(chi2_tail, 1), horizontalalignment='right',
+                  verticalalignment='top', transform=ax[1].transAxes)
+
+         plt.text(0.9, 0.875, article_chi_tail, horizontalalignment='right', fontdict={'color': 'red'},
+                  verticalalignment='top', transform=ax[1].transAxes)
+
+         fig_tail_chi.show()
+         experiment.log_figure(figure_name='fig_tail_chi_M_system_distribution', figure=fig_tail_chi)
+
+         fig_tail, ax = plt.subplots(1, 2, figsize=(20, 8))
+         n_bins = 70
+         range_hist = [1000, 8000]
+
+         ax[0].set_title('Linear hist')
+         ax[0].hist(jj_M_gan[:,2], bins=n_bins, range= range_hist)
+         ax[0].hist(jj_M_test[:,2], bins=n_bins, range= range_hist, alpha=0.5)
+         ax[1].set_title('Log hist')
+         ax[1].hist(jj_M_gan[:,2], bins=n_bins, range=range_hist, log=True)
+         ax[1].hist(jj_M_test[:,2], bins=n_bins, range=range_hist, log=True, alpha=0.5)
+
+         plt.text(0.9, 0.9, round(chi2_tail, 1), horizontalalignment='right',
+                  verticalalignment='top', transform=ax[0].transAxes)
+
+         plt.text(0.9, 0.875, article_chi_tail, horizontalalignment='right', fontdict={'color': 'red'},
+                  verticalalignment='top', transform=ax[0].transAxes)
+
+         plt.text(0.9, 0.9, round(chi2_tail, 1), horizontalalignment='right',
+                  verticalalignment='top', transform=ax[1].transAxes)
+
+         plt.text(0.9, 0.875, article_chi_tail, horizontalalignment='right', fontdict={'color': 'red'},
+                  verticalalignment='top', transform=ax[1].transAxes)
+
+         fig_tail.show()
+         experiment.log_figure(figure_name='tail_M_system_distribution', figure=fig_tail)
+
 
 
 def compute_jj(predictions):
@@ -100,4 +169,4 @@ def compute_jj(predictions):
     jj_pt = np.sqrt(np.square(x3) + np.square(y3))
     jj_eta = np.arcsinh(z3 / jj_pt)
 
-    return np.array((jj_pt, jj_eta, jj_M))
+    return np.column_stack((jj_pt, jj_eta, jj_M))

@@ -18,7 +18,10 @@ def main(args):
         args.csv_path = "csv/%s.%s.%s.%s.csv" % (args.dsid, args.level, args.preselection, args.systematic)
     logging.info(f'training file: {args.csv_path}')
 
-    data = pd.read_csv(args.csv_path, delimiter=',', names=PTCL_HEADER, usecols=PTCL_FEATURES)
+    data = pd.read_csv(args.csv_path, delimiter=',', names=PTCL_HEADER)
+    if (args.task == 'tail'):
+        data = data[data['jj_M'] > 1500]
+    data = data[PTCL_FEATURES]
     items = data.values
 
     logging.info(f'input features: {list(data.columns)}')
@@ -50,6 +53,7 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--preselection', default="pt250")
     parser.add_argument('-s', '--systematic', default="nominal")
     parser.add_argument('-d', '--dsid', default="mg5_dijet_ht500")
+    parser.add_argument('-t', '--task', default='integral', choices={'integral', 'tail'})
 
     args = parser.parse_args()
 
