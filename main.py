@@ -49,7 +49,7 @@ def main_train(args):
     plot_tail = args.tail == 'tail'
     iterations_total = train(generator, discriminator, args, dataset_train, optimizer_g, optimizer_d, scaler=scaler,
                            save_dir=save_dir, test_dataset=dataset_test.items[:len(dataset_test) // 10],
-                           experiment=experiment, device=device)
+                           experiment=experiment, device=device, plot_tail=plot_tail)
 
     n_events = len(dataset_test)
     steps = n_events // args.eval_batch_size
