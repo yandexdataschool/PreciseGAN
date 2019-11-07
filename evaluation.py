@@ -42,8 +42,8 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
         width = (max(bin_widths_t) - min(bin_widths_t)) / hist_bins[i]
 
         ax[i // 3][i % 3].bar(bin_widths_g[:-1], count_g, width=width)
-        ax[i // 3][i % 3].label = features[i]
         ax[i // 3][i % 3].bar(bin_widths_t[:-1], count_t, width=width, alpha=0.5)
+        ax[i // 3][i % 3].set_title(features[i])
 
         plt.xlim(min(bin_widths_t), max(bin_widths_t))
 

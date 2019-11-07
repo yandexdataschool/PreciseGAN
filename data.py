@@ -42,12 +42,12 @@ def get_data(args):
 
 PTCL_HEADER = [
   "eventNumber", "weight",
-  "ljet1_pt", "ljet1_eta", "ljet1_phi", "ljet1_E", "ljet1_M",
-  "ljet2_pt", "ljet2_eta", "ljet2_phi", "ljet2_E", "ljet2_M",
+  "Leading large-R jet p_t", "Leading large-R jet η", "ljet1_phi", "ljet1_E", "Leading large-R jet m",
+  "2nd leading large-R jet p_t", "2nd leading large-R jet η", "ljet2_phi", "ljet2_E", "2nd leading large-R jet m",
   "jj_pt",    "jj_eta",    "jj_phi",    "jj_E",    "jj_M",
   "jj_dPhi",  "jj_dEta",  "jj_dR",
 ]
 PTCL_FEATURES = [
-    "ljet1_pt", "ljet1_eta", "ljet1_M",
-    "ljet2_pt", "ljet2_eta", "ljet2_phi", "ljet2_M"
+    "Leading large-R jet p_t", "Leading large-R jet η", "Leading large-R jet m",
+    "2nd leading large-R jet p_t", "2nd leading large-R jet η", "ljet2_phi", "2nd leading large-R jet m"
 ]
