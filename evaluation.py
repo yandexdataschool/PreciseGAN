@@ -117,10 +117,10 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
          n_bins = 70
          range_hist = [1000, 8000]
 
-         ax[0].set_title('Linear hist')
+         ax[0].set_title('Linear hist didjet system m')
          ax[0].hist(jj_M_gan[:,2], bins=n_bins, range= range_hist)
          ax[0].hist(jj_M_test[:,2], bins=n_bins, range= range_hist, alpha=0.5)
-         ax[1].set_title('Log hist')
+         ax[1].set_title('Log hist didjet system m')
          ax[1].hist(jj_M_gan[:,2], bins=n_bins, range=range_hist, log=True)
          ax[1].hist(jj_M_test[:,2], bins=n_bins, range=range_hist, log=True, alpha=0.5)
 
