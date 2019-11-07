@@ -20,7 +20,8 @@ def main(args):
 
     data = pd.read_csv(args.csv_path, delimiter=',', names=PTCL_HEADER)
     if (args.task == 'tail'):
-        data = data[data['jj_M'] > 1500]
+        tail_cut = 1500
+        data = data[data['jj_M'] > tail_cut]
     data = data[PTCL_FEATURES]
     items = data.values
 

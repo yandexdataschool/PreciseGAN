@@ -8,8 +8,7 @@ from data import PTCL_FEATURES, DIJET_SYSTEM_FEATURES
 ANGLE_IDX = 5
 
 
-def evaluate_model(generator, experiment, test_set, batch_size, batch_num, parametres, device, scaler, step,
-                   plot_tail=False):
+def evaluate_model(generator, experiment, test_set, batch_size, batch_num, parametres, device, scaler, step):
     features = PTCL_FEATURES.copy()
     del features[ANGLE_IDX]
     features += DIJET_SYSTEM_FEATURES
@@ -37,8 +36,10 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
     hist_ranges = [(200, 800), (-2.5, 2.5), (0, 300), (200, 600), (-2.5, 2.5),
                    (0, 300), (0, 300), (-6, 6), (0, 2000)]
     start_bin = [1, 0, 0, 2, 0, 0, 0, 0, 5]
-    paper_chi = [794.7, 86.7, 525.8, 1010.8, 21.6, 1248.1, 855.5, 104.2, 906.9] if parametres.level == 'ptcl' \
-        else [164.9, 200.8, 2467.9, 1388.7, 174.3, 485.1, 1849.7, 1009.0, 76.9]
+    if parametres.level == 'ptcl':
+        paper_chi = [794.7, 86.7, 525.8, 1010.8, 21.6, 1248.1, 855.5, 104.2, 906.9]
+    else:
+        paper_chi =[164.9, 200.8, 2467.9, 1388.7, 174.3, 485.1, 1849.7, 1009.0, 76.9]
     chisqs = []
     ks_tests = []
 
@@ -78,7 +79,7 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
     experiment.log_metrics({f'ks_st_f{i}': ks for i, (ks, pval) in enumerate(ks_tests)}, step=step)
     experiment.log_metrics({f'ks_pval_f{i}': pval for i, (chisq, pval) in enumerate(ks_tests)}, step=step)
 
-    if (plot_tail):
+    if (parametres.task == 'tail'):
          fig_tail_chi, ax = plt.subplots(1, 2, figsize=(20, 8))
          n_bins_chi = 55
          article_chi_tail = 1.0
