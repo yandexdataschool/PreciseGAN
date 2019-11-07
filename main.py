@@ -28,7 +28,8 @@ def main_random_search(args):
 
 def main_train(args):
     now = datetime.now()
-    save_dir = Path().cwd() / f'{now:%Y%m%d-%H%M-%S}'
+    save_to = Path(args.save_to) if args.save_to is not None else Path().cwd()
+    save_dir = save_to / f'{now:%Y%m%d-%H%M-%S}'
     fix_seed(args.seed)
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
     device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
@@ -65,6 +66,7 @@ if __name__ == '__main__':
     parser.add_argument('--train_data', required=True)
     parser.add_argument('--test_data', required=True)
     parser.add_argument('--scaler_dump')
+    parser.add_argument('--save_to', type=str)
     parser.add_argument('-a', '--architecture', default='cnn', choices={'cnn', 'fc'})
     parser.add_argument('-o', '--optim', default='sgd', choices={'sgd', 'adam'})
     parser.add_argument('--adam_beta_1', type=float, default=0.9)
