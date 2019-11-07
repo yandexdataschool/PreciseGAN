@@ -65,8 +65,7 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
     experiment.log_figure(figure_name='distributions', figure=fig)
     fig.clear()
     plt.close(fig)
-    experiment.log_metrics({f'chisq_st_f{i}': chisq for i, (chisq, pval) in enumerate(chisqs)})
-    experiment.log_metrics({f'chisq_pval_f{i}': pval for i, (chisq, pval) in enumerate(chisqs)})
+    experiment.log_metrics({f'chi2_st_f{i}': chisq for i, chisq in enumerate(chisqs)})
 
     experiment.log_metrics({f'ks_st_f{i}': ks for i, (ks, pval) in enumerate(ks_tests)})
     experiment.log_metrics({f'ks_pval_f{i}': pval for i, (chisq, pval) in enumerate(ks_tests)})
