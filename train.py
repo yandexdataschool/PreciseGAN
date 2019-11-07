@@ -80,6 +80,6 @@ def train(generator, discriminator, parameters, train_dataset, optimizer_g, opti
                 experiment.log_metrics(vars(metrics), epoch=epoch)
                 eval_batch_num = len(test_dataset) // parameters.eval_batch_size
                 evaluate_model(generator, experiment, test_dataset, parameters.eval_batch_size, eval_batch_num, parameters,
-                               device, scaler)
+                               device, scaler, iterations_total)
 
     return iterations_total

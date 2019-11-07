@@ -54,7 +54,8 @@ def main_train(args):
     n_events = len(dataset_test)
     steps = n_events // args.eval_batch_size
 
-    evaluate_model(generator, experiment, dataset_test, args.eval_batch_size, steps, args, device, scaler)
+    evaluate_model(generator, experiment, dataset_test, args.eval_batch_size, steps, args, device, scaler,
+                   iterations_total)
     experiment.end()
 
     save_model(save_dir, generator, discriminator, optimizer_g, optimizer_d, iterations_total)

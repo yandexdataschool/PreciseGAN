@@ -8,7 +8,7 @@ from data import PTCL_FEATURES
 ANGLE_IDX = 5
 
 
-def evaluate_model(generator, experiment, test_set, batch_size, batch_num, parametres, device, scaler):
+def evaluate_model(generator, experiment, test_set, batch_size, batch_num, parametres, device, scaler, step):
     features = PTCL_FEATURES.copy()
     del features[ANGLE_IDX]
     predictions = []
@@ -62,13 +62,13 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
     fig.title = f'architecture: {parametres.architecture}'
     fig.legend()
 
-    experiment.log_figure(figure_name='distributions', figure=fig)
+    experiment.log_figure(figure_name='distributions', figure=fig, step=step)
     fig.clear()
     plt.close(fig)
-    experiment.log_metrics({f'chi2_st_f{i}': chisq for i, chisq in enumerate(chisqs)})
+    experiment.log_metrics({f'chi2_st_f{i}': chisq for i, chisq in enumerate(chisqs)}, step=step)
 
-    experiment.log_metrics({f'ks_st_f{i}': ks for i, (ks, pval) in enumerate(ks_tests)})
-    experiment.log_metrics({f'ks_pval_f{i}': pval for i, (chisq, pval) in enumerate(ks_tests)})
+    experiment.log_metrics({f'ks_st_f{i}': ks for i, (ks, pval) in enumerate(ks_tests)}, step=step)
+    experiment.log_metrics({f'ks_pval_f{i}': pval for i, (chisq, pval) in enumerate(ks_tests)}, step=step)
 
 
 def compute_jj(predictions):
