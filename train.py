@@ -74,7 +74,7 @@ def train(generator, discriminator, parameters, train_dataset, optimizer_g, opti
             if scheduler_d is not None:
                 scheduler_d.step()
 
-            if experiment is not None and parameters.log_every % iterations_total == 0:
+            if experiment is not None and iterations_total % parameters.log_every == 0:
                 assert test_dataset is not None
                 metrics = metric_accum.calculate()
                 experiment.log_metrics(vars(metrics), epoch=epoch)
