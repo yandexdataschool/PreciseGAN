@@ -68,6 +68,9 @@ def main_train(args):
     optimizer_d = setup_optimizer(discriminator, args.learning_rate, weight_decay=0, args=args)
     optimizer_g = setup_optimizer(generator, args.learning_rate, weight_decay=0, args=args)
 
+    if args.laod_from is not None:
+        load_model(Path(args.load_form), generator, discriminator, optimizer_g, optimizer_d, device)
+
     experiment = Experiment(args.comet_api_key, project_name=args.comet_project_name, workspace=args.comet_workspace)
     experiment.log_parameters(vars(args))
     iterations_total = train(generator, discriminator, args, dataset_train, optimizer_g, optimizer_d, scaler=scaler,
