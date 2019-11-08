@@ -5,6 +5,10 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 
 from data import PTCL_FEATURES, DIJET_SYSTEM_FEATURES
+from paper_invariants import PAPER_HIST_BINS, PAPER_HIST_RANGES, PAPER_START_BINS, PAPER_PTCL_CHI2_STATISTICS, \
+    PAPER_CHI2_TAIL_STATISTICS
+from paper_invariants import PAPER_RECO_CHI2_STATISTICS
+from visualization import visualize_jet_feature_distribution, visualize_dijet_system
 
 ANGLE_IDX = 5
 
@@ -33,113 +37,61 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
 
     fig, ax = plt.subplots(3, 3, figsize=(20, 12))
 
-    hist_bins = [20, 25, 30, 20, 25, 30, 15, 30, 20]
-    hist_ranges = [(200, 800), (-2.5, 2.5), (0, 300), (200, 600), (-2.5, 2.5),
-                   (0, 300), (0, 300), (-6, 6), (0, 2000)]
-    start_bin = [1, 0, 0, 2, 0, 0, 0, 0, 5]
     if parametres.level == 'ptcl':
-        paper_chi = [794.7, 86.7, 525.8, 1010.8, 21.6, 1248.1, 855.5, 104.2, 906.9]
+        paper_chi = PAPER_PTCL_CHI2_STATISTICS
     else:
-        paper_chi =[164.9, 200.8, 2467.9, 1388.7, 174.3, 485.1, 1849.7, 1009.0, 76.9]
+        paper_chi = PAPER_RECO_CHI2_STATISTICS
     chisqs = []
     ks_tests = []
 
-    for i in range(inverse_generated.shape[1]):
-        count_g, bin_widths_g = np.histogram(inverse_generated[:, i],
-                                             bins=hist_bins[i], range=hist_ranges[i])
-        count_t, bin_widths_t = np.histogram(test_set[:, i],
-                                             bins=hist_bins[i], range=hist_ranges[i])
+    for i, feature_name in enumerate(features):
+        count_g, bin_widths_g = np.histogram(inverse_generated[:, i], bins=PAPER_HIST_BINS[i],
+                                             range=PAPER_HIST_RANGES[i])
+        count_t, bin_widths_t = np.histogram(test_set[:, i], bins=PAPER_HIST_BINS[i], range=PAPER_HIST_RANGES[i])
 
-
-        ax[i // 3][i % 3].hist(inverse_generated[:, i], bins=hist_bins[i], range=hist_ranges[i], density = True)
-        ax[i // 3][i % 3].hist(test_set[:, i], bins=hist_bins[i], range=hist_ranges[i], alpha=0.5, density = True)
-        ax[i // 3][i % 3].set_title(features[i])
-        ax[i // 3][i % 3].set_ylabel('Events / Bin Width')
-
-        plt.xlim(min(bin_widths_t), max(bin_widths_t))
-
-        chi2 = stats.chisquare(count_t[start_bin[i]:], (count_g)[start_bin[i]:])[0] / (hist_bins[i]- start_bin[i] - 1)
+        chi2 = stats.chisquare(count_t[PAPER_START_BINS[i]:], count_g[PAPER_START_BINS[i]:])[0]
+        chi2 /= (PAPER_HIST_BINS[i] - PAPER_START_BINS[i] - 1)
         chisqs.append(chi2)
 
         ks = stats.ks_2samp(inverse_generated[:, i], test_set[:, i])
         ks_tests.append(ks)
 
-        plt.text(0.9, 0.9, f'χ2/NDF: {round(chi2, 1)}', horizontalalignment='right',
-                 verticalalignment='top', transform=ax[i // 3][i % 3].transAxes)
+        visualize_jet_feature_distribution(ax[i // 3][i % 3], inverse_generated[:, i], test_set[:, i],
+                                           PAPER_HIST_BINS[i], PAPER_HIST_RANGES[i], feature_name, bin_widths_t, chi2,
+                                           paper_chi[i])
 
-        plt.text(0.9, 0.8, f'paper χ2/NDF: {paper_chi[i]}', horizontalalignment='right', fontdict={'color': 'red'},
-                 verticalalignment='top', transform=ax[i // 3][i % 3].transAxes)
-
-    fig.title = f'architecture: {parametres.architecture}'
+    fig.suptitle(f'architecture: {parametres.architecture}\nComparison of kinematic observables with respect to '
+                 f'{parametres.level}-level Monte Carlo simulation')
 
     experiment.log_figure(figure_name='distributions', figure=fig, step=step)
+
     fig.clear()
     plt.close(fig)
-    experiment.log_metrics({f'chi2_st_f{i}': chisq for i, chisq in enumerate(chisqs)}, step=step)
 
+    experiment.log_metrics({f'chi2_st_f{i}': chisq for i, chisq in enumerate(chisqs)}, step=step)
     experiment.log_metrics({f'ks_st_f{i}': ks for i, (ks, pval) in enumerate(ks_tests)}, step=step)
     experiment.log_metrics({f'ks_pval_f{i}': pval for i, (chisq, pval) in enumerate(ks_tests)}, step=step)
 
-    if (parametres.task == 'tail'):
-         fig_tail_chi, ax = plt.subplots(1, 2, figsize=(20, 8))
-         n_bins_chi = 55
-         article_chi_tail = 1.0
-         chisqs_tail = []
-         range_chi = [2500, 8000]
-         count_g, bin_widths_g = np.histogram(jj_M_gan[:,2], bins = n_bins_chi, range = range_chi)
-         count_t, bin_widths_t = np.histogram(jj_M_test[:, 2], bins = n_bins_chi, range = range_chi)
+    if parametres.task == 'tail':
+        fig_tail_chi, ax = plt.subplots(1, 2, figsize=(20, 8))
+        n_bins_chi = 55
+        chisqs_tail = []
+        range_chi = [2500, 8000]
+        count_g, bin_widths_g = np.histogram(jj_M_gan[:, 2], bins=n_bins_chi, range=range_chi)
+        count_t, bin_widths_t = np.histogram(jj_M_test[:, 2], bins=n_bins_chi, range=range_chi)
 
-         chi2_tail = stats.chisquare(count_t, count_g)[0] / (n_bins_chi - 1)
-         chisqs_tail.append(chi2_tail)
+        chi2_tail = stats.chisquare(count_t, count_g)[0] / (n_bins_chi - 1)
+        chisqs_tail.append(chi2_tail)
 
-         ax[0].set_title('Linear hist didjet system m')
-         ax[0].hist(jj_M_gan[:,2], bins=n_bins_chi, range= range_chi)
-         ax[0].hist(jj_M_test[:,2], bins=n_bins_chi, range= range_chi, alpha=0.5)
-         ax[1].set_title('Log hist didjet system m')
-         ax[1].hist(jj_M_gan[:,2], bins=n_bins_chi, range=range_chi, log=True)
-         ax[1].hist(jj_M_test[:,2], bins=n_bins_chi, range=range_chi, log=True, alpha=0.5)
+        visualize_dijet_system(jj_M_gan, jj_M_test, n_bins_chi, range_chi, chi2_tail, PAPER_CHI2_TAIL_STATISTICS, ax,
+                               fig_tail_chi, experiment)
 
-         plt.text(0.9, 0.9,  f'χ2/NDF: {round(chi2_tail, 1)}', horizontalalignment='right',
-                  verticalalignment='top', transform=ax[0].transAxes)
+        fig_tail, ax = plt.subplots(1, 2, figsize=(20, 8))
+        n_bins = 70
+        range_hist = [1000, 8000]
 
-         plt.text(0.9, 0.875, f'paper χ2/NDF: {article_chi_tail}', horizontalalignment='right', fontdict={'color': 'red'},
-                  verticalalignment='top', transform=ax[0].transAxes)
-
-         plt.text(0.9, 0.9, f'χ2/NDF: {round(chi2_tail, 1)}', horizontalalignment='right',
-                  verticalalignment='top', transform=ax[1].transAxes)
-
-         plt.text(0.9, 0.875, f'paper χ2/NDF: {article_chi_tail}', horizontalalignment='right', fontdict={'color': 'red'},
-                  verticalalignment='top', transform=ax[1].transAxes)
-
-         fig_tail_chi.show()
-         experiment.log_figure(figure_name='fig_tail_chi_M_system_distribution', figure=fig_tail_chi)
-
-         fig_tail, ax = plt.subplots(1, 2, figsize=(20, 8))
-         n_bins = 70
-         range_hist = [1000, 8000]
-
-         ax[0].set_title('Linear hist didjet system m')
-         ax[0].hist(jj_M_gan[:,2], bins=n_bins, range= range_hist)
-         ax[0].hist(jj_M_test[:,2], bins=n_bins, range= range_hist, alpha=0.5)
-         ax[1].set_title('Log hist didjet system m')
-         ax[1].hist(jj_M_gan[:,2], bins=n_bins, range=range_hist, log=True)
-         ax[1].hist(jj_M_test[:,2], bins=n_bins, range=range_hist, log=True, alpha=0.5)
-
-         plt.text(0.9, 0.9, f'χ2/NDF: {round(chi2_tail, 1)}', horizontalalignment='right',
-                  verticalalignment='top', transform=ax[0].transAxes)
-
-         plt.text(0.9, 0.875,  f'paper χ2/NDF: {article_chi_tail}', horizontalalignment='right', fontdict={'color': 'red'},
-                  verticalalignment='top', transform=ax[0].transAxes)
-
-         plt.text(0.9, 0.9, f'χ2/NDF: {round(chi2_tail, 1)}', horizontalalignment='right',
-                  verticalalignment='top', transform=ax[1].transAxes)
-
-         plt.text(0.9, 0.875,  f'paper χ2/NDF: {article_chi_tail}', horizontalalignment='right', fontdict={'color': 'red'},
-                  verticalalignment='top', transform=ax[1].transAxes)
-
-         fig_tail.show()
-         experiment.log_figure(figure_name='tail_M_system_distribution', figure=fig_tail)
-
+        visualize_dijet_system(jj_M_gan, jj_M_test, n_bins, range_hist, chi2_tail, PAPER_CHI2_TAIL_STATISTICS, ax,
+                               fig_tail_chi, experiment)
 
 
 def compute_jj(predictions):
