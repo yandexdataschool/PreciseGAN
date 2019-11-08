@@ -91,7 +91,7 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
         range_hist = [1000, 8000]
 
         visualize_dijet_system(jj_M_gan, jj_M_test, n_bins, range_hist, chi2_tail, PAPER_CHI2_TAIL_STATISTICS, ax,
-                               fig_tail_chi, experiment)
+                               fig_tail, experiment)
 
 
 def compute_jj(predictions):
