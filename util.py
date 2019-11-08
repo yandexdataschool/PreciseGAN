@@ -27,8 +27,10 @@ def load_model(model_path, generator, discriminator, generator_opt, discriminato
         weights = torch.load(f, map_location=device)
         generator.load_state_dict(weights['generator'])
         discriminator.load_state_dict(weights['discriminator'])
-        generator_opt.load_state_dict(weights['generator_opt'])
-        discriminator_opt.load_state_dict(weights['discriminator_opt'])
+        if generator_opt is not None:
+            generator_opt.load_state_dict(weights['generator_opt'])
+        if discriminator_opt is not None:
+            discriminator_opt.load_state_dict(weights['discriminator_opt'])
 
 
 def fix_seed(seed):

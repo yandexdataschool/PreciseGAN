@@ -12,7 +12,7 @@ from hyperparam import RandInt, rand_search, RandChoice
 from model import get_models
 from optim import setup_optimizer
 from train import train
-from util import fix_seed, save_model
+from util import fix_seed, save_model, load_model
 
 
 def main_random_search(args):
@@ -24,6 +24,29 @@ def main_random_search(args):
     }
 
     rand_search(main_train, args, args_generators)
+
+
+def main_eval(args):
+    assert args.load_from is not None, '--load_from required in eval mode'
+
+    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
+    dataset_train, dataset_test, scaler = get_data(args)
+
+    logging.info(f'evaluation mode. Level: {args.level}')
+
+    device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
+    n_features = dataset_train.items.shape[1]
+    generator, discriminator = get_models(args, n_features, device)
+
+    experiment = Experiment(args.comet_api_key, project_name=args.comet_project_name, workspace=args.comet_workspace)
+    experiment.log_parameters(vars(args))
+
+    load_model(Path(args.load_from), generator, discriminator, None, None, device)
+
+    n_events = len(dataset_test)
+    steps = n_events // args.eval_batch_size
+
+    evaluate_model(generator, experiment, dataset_test, args.eval_batch_size, steps, args, device, scaler, 0)
 
 
 def main_train(args):
@@ -67,6 +90,8 @@ if __name__ == '__main__':
     parser.add_argument('--test_data', required=True)
     parser.add_argument('--scaler_dump')
     parser.add_argument('--save_to', type=str)
+    parser.add_argument('--load_from', type=str)
+    parser.add_argument('--mode', type=str, default='train', choices={'train', 'eval'})
     parser.add_argument('-a', '--architecture', default='cnn', choices={'cnn', 'fc'})
     parser.add_argument('-o', '--optim', default='sgd', choices={'sgd', 'adam'})
     parser.add_argument('--adam_beta_1', type=float, default=0.9)
@@ -87,4 +112,9 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--task', default='integral', choices={'integral', 'tail'})
     args = parser.parse_args()
 
-    main_train(args)
+    if args.mode == 'train':
+        main_train(args)
+    elif args.mode == 'eval':
+        main_eval(args)
+    else:
+        raise ValueError
