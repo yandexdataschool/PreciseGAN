@@ -24,6 +24,7 @@ def train(generator, discriminator, parameters, train_dataset, optimizer_g, opti
     for epoch in range(epochs_num):
         metric_accum = MetricsAccum()
         for batch_num, X_batch_real in enumerate(tqdm(train_loader, desc=f'epoch {epoch}', position=0, leave=True)):
+            generator.train()
             batch_size = X_batch_real.size(0)
             y_real = torch.ones((batch_size, 1), device=device)
             y_fake = torch.zeros((batch_size, 1), device=device)
@@ -79,6 +80,6 @@ def train(generator, discriminator, parameters, train_dataset, optimizer_g, opti
                 experiment.log_metrics(vars(metrics), epoch=epoch)
                 eval_batch_num = int((parameters.gan_test_ratio*len(test_dataset)) / parameters.eval_batch_size)
                 evaluate_model(generator, experiment, test_dataset, parameters.eval_batch_size, eval_batch_num, parameters,
-                               device, scaler, iterations_total, parameters.gan_test_ratio)
+                               device, scaler, iterations_total)
 
     return iterations_total

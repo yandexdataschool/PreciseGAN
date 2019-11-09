@@ -46,7 +46,7 @@ def main_eval(args):
     n_events = len(dataset_test)
     steps = (args.gan_test_ratio*n_events) // args.eval_batch_size
 
-    evaluate_model(generator, experiment, dataset_test, args.eval_batch_size, steps, args, device, scaler, 0, args.gan_test_ratio)
+    evaluate_model(generator, experiment, dataset_test, args.eval_batch_size, steps, args, device, scaler, 0)
 
 
 def main_train(args):
@@ -81,7 +81,7 @@ def main_train(args):
     steps = (args.gan_test_ratio*n_events) // args.eval_batch_size
 
     evaluate_model(generator, experiment, dataset_test, args.eval_batch_size, steps, args, device, scaler,
-                   iterations_total, args.gan_test_ratio)
+                   iterations_total)
     experiment.end()
 
     save_model(save_dir, generator, discriminator, optimizer_g, optimizer_d, iterations_total)

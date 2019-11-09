@@ -13,8 +13,7 @@ from visualization import visualize_jet_feature_distribution, visualize_dijet_sy
 ANGLE_IDX = 5
 
 
-def evaluate_model(generator, experiment, test_set, batch_size, batch_num, parametres, device, scaler, step,
-                   gan_test_ratio):
+def evaluate_model(generator, experiment, test_set, batch_size, batch_num, parametres, device, scaler, step,):
     features = PTCL_FEATURES.copy()
     del features[ANGLE_IDX]
     features += DIJET_SYSTEM_FEATURES
@@ -24,7 +23,6 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
         x_noise = torch.randn((batch_size, parametres.gan_noise_size), device=device)
         predictions.append(generator(x_noise).cpu().detach().numpy())
     predictions_np = np.concatenate(predictions)
-    generator.train()
     inverse_generated = scaler.inverse_transform(predictions_np)
 
     jj_M_gan = compute_jj(inverse_generated)
@@ -50,7 +48,7 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
                                              range=PAPER_HIST_RANGES[i])
         count_t, bin_widths_t = np.histogram(test_set[:, i], bins=PAPER_HIST_BINS[i], range=PAPER_HIST_RANGES[i])
 
-        chi2 = stats.chisquare(count_t[PAPER_START_BINS[i]:], count_g[PAPER_START_BINS[i]:]/gan_test_ratio)[0]
+        chi2 = stats.chisquare(count_t[PAPER_START_BINS[i]:], count_g[PAPER_START_BINS[i]:]/parametres.gan_test_ratio)[0]
         chi2 /= (PAPER_HIST_BINS[i] - PAPER_START_BINS[i] - 1)
         chisqs.append(chi2)
 
@@ -81,7 +79,7 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
         count_g, bin_widths_g = np.histogram(jj_M_gan[:, 2], bins=n_bins_chi, range=range_chi)
         count_t, bin_widths_t = np.histogram(jj_M_test[:, 2], bins=n_bins_chi, range=range_chi)
 
-        chi2_tail = stats.chisquare(count_t, count_g/gan_test_ratio)[0] / (n_bins_chi - 1)
+        chi2_tail = stats.chisquare(count_t, count_g/parametres.gan_test_ratio)[0] / (n_bins_chi - 1)
         chisqs_tail.append(chi2_tail)
 
         visualize_dijet_system(jj_M_gan, jj_M_test, n_bins_chi, range_chi, chi2_tail, PAPER_CHI2_TAIL_STATISTICS, ax,
