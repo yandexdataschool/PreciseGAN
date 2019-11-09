@@ -13,17 +13,16 @@ from visualization import visualize_jet_feature_distribution, visualize_dijet_sy
 ANGLE_IDX = 5
 
 
-def evaluate_model(generator, experiment, test_set, batch_size, batch_num, parametres, device, scaler, step):
+def evaluate_model(generator, experiment, test_set, batch_size, batch_num, parametres, device, scaler, step,):
     features = PTCL_FEATURES.copy()
     del features[ANGLE_IDX]
     features += DIJET_SYSTEM_FEATURES
     predictions = []
+    generator.eval()
     for _ in tqdm(range(batch_num), desc='evaluation', position=0, leave=True):
         x_noise = torch.randn((batch_size, parametres.gan_noise_size), device=device)
         predictions.append(generator(x_noise).cpu().detach().numpy())
-
     predictions_np = np.concatenate(predictions)
-
     inverse_generated = scaler.inverse_transform(predictions_np)
 
     jj_M_gan = compute_jj(inverse_generated)
@@ -49,7 +48,7 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
                                              range=PAPER_HIST_RANGES[i])
         count_t, bin_widths_t = np.histogram(test_set[:, i], bins=PAPER_HIST_BINS[i], range=PAPER_HIST_RANGES[i])
 
-        chi2 = stats.chisquare(count_t[PAPER_START_BINS[i]:], count_g[PAPER_START_BINS[i]:])[0]
+        chi2 = stats.chisquare(count_t[PAPER_START_BINS[i]:], count_g[PAPER_START_BINS[i]:]/parametres.gan_test_ratio)[0]
         chi2 /= (PAPER_HIST_BINS[i] - PAPER_START_BINS[i] - 1)
         chisqs.append(chi2)
 
@@ -74,21 +73,21 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
 
     if parametres.task == 'tail':
         fig_tail_chi, ax = plt.subplots(1, 2, figsize=(20, 8))
-        n_bins_chi = 55
+        n_bins_chi = 75
         chisqs_tail = []
-        range_chi = [2500, 8000]
+        range_chi = [2500, 10000]
         count_g, bin_widths_g = np.histogram(jj_M_gan[:, 2], bins=n_bins_chi, range=range_chi)
         count_t, bin_widths_t = np.histogram(jj_M_test[:, 2], bins=n_bins_chi, range=range_chi)
 
-        chi2_tail = stats.chisquare(count_t, count_g)[0] / (n_bins_chi - 1)
+        chi2_tail = stats.chisquare(count_t, count_g/parametres.gan_test_ratio)[0] / (n_bins_chi - 1)
         chisqs_tail.append(chi2_tail)
 
         visualize_dijet_system(jj_M_gan, jj_M_test, n_bins_chi, range_chi, chi2_tail, PAPER_CHI2_TAIL_STATISTICS, ax,
                                fig_tail_chi, experiment)
 
         fig_tail, ax = plt.subplots(1, 2, figsize=(20, 8))
-        n_bins = 70
-        range_hist = [1000, 8000]
+        n_bins = 90
+        range_hist = [1000, 10000]
 
         visualize_dijet_system(jj_M_gan, jj_M_test, n_bins, range_hist, chi2_tail, PAPER_CHI2_TAIL_STATISTICS, ax,
                                fig_tail, experiment)
