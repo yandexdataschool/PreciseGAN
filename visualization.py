@@ -20,11 +20,11 @@ def visualize_jet_feature_distribution(ax, inverse_generated, test_set, hist_bin
 def visualize_dijet_system(jj_M_gan, jj_M_test, n_bins_chi, range_chi, chi2_tail, article_chi_tail, ax, fig_tail_chi,
                            experiment):
     ax[0].set_title('Linear hist dijet system m')
-    ax[0].hist(jj_M_gan[:, 2], bins=n_bins_chi, range=range_chi)
-    ax[0].hist(jj_M_test[:, 2], bins=n_bins_chi, range=range_chi, alpha=0.5)
+    ax[0].hist(jj_M_gan[:, 2], bins=n_bins_chi, range=range_chi, density = True)
+    ax[0].hist(jj_M_test[:, 2], bins=n_bins_chi, range=range_chi, alpha=0.5, density = True)
     ax[1].set_title('Log hist dijet system m')
-    ax[1].hist(jj_M_gan[:, 2], bins=n_bins_chi, range=range_chi, log=True)
-    ax[1].hist(jj_M_test[:, 2], bins=n_bins_chi, range=range_chi, log=True, alpha=0.5)
+    ax[1].hist(jj_M_gan[:, 2], bins=n_bins_chi, range=range_chi, log=True, density=True)
+    ax[1].hist(jj_M_test[:, 2], bins=n_bins_chi, range=range_chi, log=True, alpha=0.5, density=True)
 
     plt.text(0.9, 0.9, f'χ2/NDF: {round(chi2_tail, 1)}', horizontalalignment='right',
              verticalalignment='top', transform=ax[0].transAxes)

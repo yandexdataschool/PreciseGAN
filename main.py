@@ -44,7 +44,7 @@ def main_eval(args):
     load_model(Path(args.load_from), generator, discriminator, None, None, device)
 
     n_events = len(dataset_test)
-    steps = n_events // args.eval_batch_size
+    steps = (args.mult_gan_predictions*n_events) // args.eval_batch_size
 
     evaluate_model(generator, experiment, dataset_test, args.eval_batch_size, steps, args, device, scaler, 0)
 
@@ -69,7 +69,7 @@ def main_train(args):
     optimizer_g = setup_optimizer(generator, args.learning_rate, weight_decay=0, args=args)
 
     if args.load_from is not None:
-        load_model(Path(args.load_form), generator, discriminator, optimizer_g, optimizer_d, device)
+        load_model(Path(args.load_from), generator, discriminator, optimizer_g, optimizer_d, device)
 
     experiment = Experiment(args.comet_api_key, project_name=args.comet_project_name, workspace=args.comet_workspace)
     experiment.log_parameters(vars(args))
@@ -78,7 +78,7 @@ def main_train(args):
                            experiment=experiment, device=device)
 
     n_events = len(dataset_test)
-    steps = n_events // args.eval_batch_size
+    steps = (args.mult_gan_predictions*n_events) // args.eval_batch_size
 
     evaluate_model(generator, experiment, dataset_test, args.eval_batch_size, steps, args, device, scaler,
                    iterations_total)
@@ -91,6 +91,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--train_data', required=True)
     parser.add_argument('--test_data', required=True)
+    parser.add_argument('--mult_gan_predictions', type = float, default = 1)
     parser.add_argument('--scaler_dump')
     parser.add_argument('--save_to', type=str)
     parser.add_argument('--load_from', type=str)
