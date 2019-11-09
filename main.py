@@ -44,9 +44,9 @@ def main_eval(args):
     load_model(Path(args.load_from), generator, discriminator, None, None, device)
 
     n_events = len(dataset_test)
-    steps = (args.mult_gan_predictions*n_events) // args.eval_batch_size
+    steps = (args.gan_test_ratio*n_events) // args.eval_batch_size
 
-    evaluate_model(generator, experiment, dataset_test, args.eval_batch_size, steps, args, device, scaler, 0)
+    evaluate_model(generator, experiment, dataset_test, args.eval_batch_size, steps, args, device, scaler, 0, args.gan_test_ratio)
 
 
 def main_train(args):
@@ -78,10 +78,10 @@ def main_train(args):
                            experiment=experiment, device=device)
 
     n_events = len(dataset_test)
-    steps = (args.mult_gan_predictions*n_events) // args.eval_batch_size
+    steps = (args.gan_test_ratio*n_events) // args.eval_batch_size
 
     evaluate_model(generator, experiment, dataset_test, args.eval_batch_size, steps, args, device, scaler,
-                   iterations_total)
+                   iterations_total, args.gan_test_ratio)
     experiment.end()
 
     save_model(save_dir, generator, discriminator, optimizer_g, optimizer_d, iterations_total)
@@ -91,7 +91,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--train_data', required=True)
     parser.add_argument('--test_data', required=True)
-    parser.add_argument('--mult_gan_predictions', type = float, default = 1)
+    parser.add_argument('--gan_test_ratio', type = float, default = 1)
     parser.add_argument('--scaler_dump')
     parser.add_argument('--save_to', type=str)
     parser.add_argument('--load_from', type=str)
