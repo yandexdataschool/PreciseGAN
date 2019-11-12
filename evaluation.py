@@ -11,6 +11,10 @@ from paper_invariants import PAPER_RECO_CHI2_STATISTICS
 from visualization import visualize_jet_feature_distribution, visualize_dijet_system
 
 ANGLE_IDX = 5
+LJET1_ETA = 1
+LJET2_ETA = 4
+LJET1_PT = 0
+LJET2_PT = 3
 
 
 def evaluate_model(generator, experiment, test_set, batch_size, batch_num, parametres, device, scaler, step,):
@@ -34,6 +38,15 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
     inverse_generated = np.concatenate((inverse_generated, jj_M_gan), 1)
     test_set = np.concatenate((test_set, jj_M_test), 1)
 
+    flip_vector = 2*np.random.binomial(1, 0.5, inverse_generated.shape[0]) - 1
+    inverse_generated[:,LJET1_ETA] = flip_vector*inverse_generated[:,LJET1_ETA]
+    inverse_generated[:,LJET2_ETA] = flip_vector*inverse_generated[:,LJET2_ETA]
+
+    choose_vector = (inverse_generated[:, LJET1_PT] >= inverse_generated[:, LJET2_PT]) * \
+        (inverse_generated[:,LJET1_PT] >= 250) * (inverse_generated[:, LJET2_PT] >= 250)
+    inverse_generated = inverse_generated[choose_vector]
+    gan_test_ratio = inverse_generated.shape[0]/test_set.shape[0]
+
     fig, ax = plt.subplots(3, 3, figsize=(20, 12))
 
     if parametres.level == 'ptcl':
@@ -48,7 +61,7 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
                                              range=PAPER_HIST_RANGES[i])
         count_t, bin_widths_t = np.histogram(test_set[:, i], bins=PAPER_HIST_BINS[i], range=PAPER_HIST_RANGES[i])
 
-        chi2 = stats.chisquare(count_t[PAPER_START_BINS[i]:], count_g[PAPER_START_BINS[i]:]/parametres.gan_test_ratio)[0]
+        chi2 = stats.chisquare(count_t[PAPER_START_BINS[i]:], count_g[PAPER_START_BINS[i]:]/gan_test_ratio)[0]
         chi2 /= (PAPER_HIST_BINS[i] - PAPER_START_BINS[i] - 1)
         chisqs.append(chi2)
 
@@ -79,7 +92,7 @@ def evaluate_model(generator, experiment, test_set, batch_size, batch_num, param
         count_g, bin_widths_g = np.histogram(jj_M_gan[:, 2], bins=n_bins_chi, range=range_chi)
         count_t, bin_widths_t = np.histogram(jj_M_test[:, 2], bins=n_bins_chi, range=range_chi)
 
-        chi2_tail = stats.chisquare(count_t, count_g/parametres.gan_test_ratio)[0] / (n_bins_chi - 1)
+        chi2_tail = stats.chisquare(count_t, count_g/gan_test_ratio)[0] / (n_bins_chi - 1)
         chisqs_tail.append(chi2_tail)
 
         visualize_dijet_system(jj_M_gan, jj_M_test, n_bins_chi, range_chi, chi2_tail, PAPER_CHI2_TAIL_STATISTICS, ax,
