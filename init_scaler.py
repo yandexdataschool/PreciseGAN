@@ -3,7 +3,7 @@ import pickle
 from pathlib import Path
 
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, QuantileTransformer
 
 from data import PTCL_HEADER, PTCL_FEATURES
 
@@ -18,7 +18,13 @@ def main(args):
     data = data[PTCL_FEATURES]
     X_train = data.values
 
-    scaler = MinMaxScaler((-1, 1))
+    if args.scaler == 'minmax':
+        scaler = MinMaxScaler((-1, 1))
+    elif args.scaler == 'quantile':
+        scaler = QuantileTransformer(output_distribution='normal')
+    else:
+        raise ValueError(f'Unknown scaler type: {args.scaler}')
+
     scaler.fit(X_train)
 
     scaler_path = Path(f'scaler.{level}.pkl')
@@ -31,5 +37,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--csv_path', type=str, required=True)
     parser.add_argument('-t', '--task', default='integral', choices={'integral', 'tail'})
+    parser.add_argument('-s', '--scaler', default='minmax', choices={'minmax', 'quantile'})
     args = parser.parse_args()
     main(args)

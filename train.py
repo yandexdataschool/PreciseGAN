@@ -2,84 +2,137 @@ import logging
 import math
 
 import torch
-from torch import nn
 from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
 
 from evaluation import evaluate_model
-from metrics import MetricsAccum
 from util import save_model
 
 
-def train(generator, discriminator, parameters, train_dataset, optimizer_g, optimizer_d, device, experiment, scaler,
-          save_dir, test_dataset=None, scheduler_d=None, scheduler_g=None, criterion=nn.BCELoss()):
-    logging.info(f'Train for {parameters.iterations} iterations with BATCH_SIZE={parameters.batch_size} and '
-                 f'TRAINING_RATIO={parameters.training_ratio}')
+class GANTrainer:
+    def __init__(self, generator, discriminator, device='cpu', **kwargs):
+        self.generator = generator
+        self.discriminator = discriminator
+        self.device = device
+        self.kwargs = kwargs
 
-    train_loader = DataLoader(dataset=train_dataset, batch_size=parameters.batch_size)
+    def train(self, parameters, train_dataset, optimizer_g, optimizer_d,
+              experiment, scaler, save_dir,
+              test_dataset=None, scheduler_d=None, scheduler_g=None):
 
-    epochs_num = int(math.ceil(parameters.iterations / len(train_loader)))
-    iterations_total = 0
+        logging.info(f'Train for {parameters.iterations} iterations with BATCH_SIZE={parameters.batch_size} and '
+                     f'TRAINING_RATIO={parameters.training_ratio}')
 
-    for epoch in range(epochs_num):
-        metric_accum = MetricsAccum()
-        for batch_num, X_batch_real in enumerate(tqdm(train_loader, desc=f'epoch {epoch}', position=0, leave=True)):
-            generator.train()
-            batch_size = X_batch_real.size(0)
-            y_real = torch.ones((batch_size, 1), device=device)
-            y_fake = torch.zeros((batch_size, 1), device=device)
-            if (iterations_total + 1) % parameters.save_every == 0:
-                save_model(save_dir, generator, discriminator, optimizer_g, optimizer_d, iterations_total)
-            if iterations_total > parameters.iterations:
-                break
-            iterations_total += 1
-            if batch_num % parameters.training_ratio == 0:
-                X_noise = torch.randn((batch_size, parameters.gan_noise_size), device=device)
+        train_loader = DataLoader(dataset=train_dataset, shuffle=True, batch_size=parameters.batch_size)
 
-                predict = discriminator(generator(X_noise.cuda()))
-                loss = criterion(predict, y_real)
+        epochs_num = int(math.ceil(parameters.iterations / len(train_loader)))
+        iterations_total = 0
 
-                metric_accum.gen_accum(loss.item())
+        for epoch in range(epochs_num):
+            for batch_num, X_batch_real in enumerate(tqdm(train_loader, desc=f'epoch {epoch}', position=0, leave=True)):
+                self.generator.train()
+                batch_size = X_batch_real.size(0)
+
+                if (iterations_total + 1) % parameters.save_every == 0:
+                    save_model(save_dir, self.generator, self.discriminator, optimizer_g, optimizer_d, iterations_total)
+                if iterations_total > parameters.iterations:
+                    break
+
+                iterations_total += 1
+
+                for _ in range(parameters.training_ratio):
+                    d_loss = self.discriminator_loss(parameters, X_batch_real)
+
+                    optimizer_d.zero_grad()
+                    d_loss.backward()
+                    optimizer_d.step()
+
+                    if scheduler_d is not None:
+                        scheduler_d.step()
+
+                g_loss = self.generator_loss((batch_size, parameters.gan_noise_size))
 
                 optimizer_g.zero_grad()
-                loss.backward()
+                g_loss.backward()
                 optimizer_g.step()
 
                 if scheduler_g is not None:
                     scheduler_g.step()
 
-            X_batch_real = X_batch_real.to(device)
+                if experiment is not None and iterations_total % parameters.log_every == 0:
+                    assert test_dataset is not None
+                    experiment.log_metrics({'g_loss': g_loss.detach().cpu().numpy(),
+                                            'd_loss': d_loss.detach().cpu().numpy()})
+                    eval_batch_num = int((parameters.gan_test_ratio * len(test_dataset)) / parameters.eval_batch_size)
+                    evaluate_model(self.generator, experiment,
+                                   test_dataset, parameters.eval_batch_size,
+                                   eval_batch_num, parameters,
+                                   self.device, scaler, iterations_total)
 
-            X_noise = torch.randn((batch_size, parameters.gan_noise_size), device=device)
-            X_batch_fake = generator(X_noise).detach()
+        return iterations_total
 
-            predict = discriminator(X_batch_real.float())
-            loss = criterion(predict, y_real)
+    def discriminator_loss(self, parameters, X_batch_real):
+        X_batch_real = X_batch_real.to(self.device)
 
-            optimizer_d.zero_grad()
-            loss.backward()
-            optimizer_d.step()
+        X_noise = torch.randn((X_batch_real.size(0), parameters.gan_noise_size)).to(self.device)
+        G_output = self.generator(X_noise)
 
-            metric_accum.disc_accum(loss.item(), torch.round(predict), y_real)
+        D_fake = self.discriminator(G_output.float())
+        D_real = self.discriminator(X_batch_real.float())
 
-            predict = discriminator(X_batch_fake)
-            loss = criterion(predict, y_fake)
+        D_loss = -torch.mean(torch.cat((torch.log(D_real + 1e-8),
+                                        torch.log(1 - D_fake + 1e-8))))
 
-            optimizer_d.zero_grad()
-            loss.backward()
-            optimizer_d.step()
+        return D_loss
 
-            metric_accum.disc_accum(loss.item(), torch.round(predict), y_fake)
+    def generator_loss(self, noise_batch_shape):
+        X_noise = torch.randn(noise_batch_shape).to(self.device)
+        G_output = self.generator(X_noise)
+        D_output = self.discriminator(G_output.float())
 
-            if scheduler_d is not None:
-                scheduler_d.step()
+        G_loss = -torch.mean(torch.log(D_output + 1e-8))
 
-            if experiment is not None and iterations_total % parameters.log_every == 0:
-                assert test_dataset is not None
-                metrics = metric_accum.calculate()
-                experiment.log_metrics(vars(metrics), epoch=epoch)
-                eval_batch_num = int((parameters.gan_test_ratio*len(test_dataset)) / parameters.eval_batch_size)
-                evaluate_model(generator, experiment, test_dataset, parameters.eval_batch_size, eval_batch_num, parameters,
-                               device, scaler, iterations_total)
+        return G_loss
 
-    return iterations_total
+
+class WGPGANTrainer(GANTrainer):
+    def discriminator_loss(self, parameters, X_batch_real):
+        X_batch_real = X_batch_real.to(self.device)
+
+        X_noise = torch.randn((parameters.batch_size, parameters.gan_noise_size)).to(self.device)
+        G_output = self.generator(X_noise).detach()
+
+        D_fake = self.discriminator(G_output.float())
+        D_real = self.discriminator(X_batch_real.float())
+
+        epsilon = torch.rand(X_batch_real.shape[0], 1).expand(X_batch_real.size()).to(self.device)
+
+        G_interpolation = torch.Tensor(
+            epsilon * X_batch_real.float() + (1 - epsilon) * G_output.float(),
+            requires_grad=True)
+
+        D_interpolation = self.discriminator(G_interpolation)
+
+        weight = torch.ones(D_interpolation.size(), device=self.device)
+
+        gradients = torch.autograd.grad(outputs=D_interpolation,
+                                        inputs=G_interpolation,
+                                        grad_outputs=weight,
+                                        only_inputs=True,
+                                        create_graph=True,
+                                        retain_graph=True)[0]
+
+        grad_penalty = self.kwargs['lambda_'] * torch.mean((gradients.norm(2, dim=1) - 1) ** 2)
+
+        D_loss = torch.mean(D_fake) - torch.mean(D_real) + grad_penalty
+
+        return D_loss
+
+    def generator_loss(self, noise_size):
+        X_noise = torch.randn(noise_size).to(self.device)
+        G_output = self.generator(X_noise)
+        D_output = self.discriminator(G_output.float())
+
+        G_loss = -1 * (torch.mean(D_output))
+
+        return G_loss
