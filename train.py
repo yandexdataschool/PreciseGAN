@@ -107,8 +107,10 @@ class WGPGANTrainer(GANTrainer):
 
         epsilon = torch.rand(X_batch_real.shape[0], 1).expand(X_batch_real.size()).to(self.device)
 
-        G_interpolation = epsilon * X_batch_real.float() + (1 - epsilon) * G_output.float()
-        G_interpolation = torch.autograd.Variable(G_interpolation, requires_grad=True)
+        G_interpolation = torch.Tensor(
+            epsilon * X_batch_real.float() + (1 - epsilon) * G_output.float(),
+            requires_grad=True)
+
         D_interpolation = self.discriminator(G_interpolation)
 
         weight = torch.ones(D_interpolation.size(), device=self.device)
