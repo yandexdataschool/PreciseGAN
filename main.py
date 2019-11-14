@@ -11,7 +11,7 @@ from evaluation import evaluate_model
 from hyperparam import RandInt, rand_search, RandChoice
 from model import get_models
 from optim import setup_optimizer
-from train import train
+from train import GANTrainer, WGPGANTrainer
 from util import fix_seed, save_model, load_model
 
 
@@ -62,8 +62,14 @@ def main_train(args):
     logging.info(f'training level: {args.level}')
 
     n_features = dataset_train.items.shape[1]
-
     generator, discriminator = get_models(args, n_features, device)
+
+    if args.gan_type == 'vanilla':
+        trainer = GANTrainer(generator, discriminator, device)
+    elif args.gan_type == 'wgp':
+        trainer = WGPGANTrainer(generator, discriminator, device, lambda_=args.lambda_)
+    else:
+        raise ValueError(f'Unknown gan type: {args.gan_type}')
 
     optimizer_d = setup_optimizer(discriminator, args.learning_rate, weight_decay=0, args=args)
     optimizer_g = setup_optimizer(generator, args.learning_rate, weight_decay=0, args=args)
@@ -73,12 +79,12 @@ def main_train(args):
 
     experiment = Experiment(args.comet_api_key, project_name=args.comet_project_name, workspace=args.comet_workspace)
     experiment.log_parameters(vars(args))
-    iterations_total = train(generator, discriminator, args, dataset_train, optimizer_g, optimizer_d, scaler=scaler,
-                           save_dir=save_dir, test_dataset=dataset_test.items[:len(dataset_test) // 10],
-                           experiment=experiment, device=device)
+    iterations_total = trainer.train(args, dataset_train, optimizer_g, optimizer_d, scaler=scaler,
+                             save_dir=save_dir, test_dataset=dataset_test.items[:len(dataset_test) // 10],
+                             experiment=experiment)
 
     n_events = len(dataset_test)
-    steps = (args.gan_test_ratio*n_events) // args.eval_batch_size
+    steps = (args.gan_test_ratio * n_events) // args.eval_batch_size
 
     evaluate_model(generator, experiment, dataset_test, args.eval_batch_size, steps, args, device, scaler,
                    iterations_total)
@@ -91,13 +97,16 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--train_data', required=True)
     parser.add_argument('--test_data', required=True)
-    parser.add_argument('--gan_test_ratio', type = float, default = 1)
+    parser.add_argument('--gan_test_ratio', type=float, default=1)
+    parser.add_argument('-t', '--task', default='integral', choices={'integral', 'tail'})
+    parser.add_argument('--gan_type', default='vanilla', choices={'vanilla', 'wgp'})
+    parser.add_argument('--lambda_', type=float, default=2.)
     parser.add_argument('--scaler_dump')
     parser.add_argument('--save_to', type=str)
     parser.add_argument('--load_from', type=str)
     parser.add_argument('--mode', type=str, default='train', choices={'train', 'eval'})
     parser.add_argument('-a', '--architecture', default='cnn', choices={'cnn', 'fc'})
-    parser.add_argument('-o', '--optim', default='sgd', choices={'sgd', 'adam'})
+    parser.add_argument('-o', '--optim', default='sgd', choices={'sgd', 'adam', 'rmsprop'})
     parser.add_argument('--adam_beta_1', type=float, default=0.9)
     parser.add_argument('--adam_beta_2', type=float, default=0.99)
     parser.add_argument('-l', '--level', default="ptcl")
@@ -113,7 +122,6 @@ if __name__ == '__main__':
     parser.add_argument('--comet_api_key', type=str, required=True)
     parser.add_argument('--comet_project_name', type=str, required=True)
     parser.add_argument('--comet_workspace', type=str, required=True)
-    parser.add_argument('-t', '--task', default='integral', choices={'integral', 'tail'})
     args = parser.parse_args()
 
     if args.mode == 'train':

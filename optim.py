@@ -1,5 +1,4 @@
-from torch.optim.adam import Adam
-from torch.optim.sgd import SGD
+from torch import optim
 
 
 def setup_optimizer(model, lr, weight_decay, args):
@@ -11,9 +10,11 @@ def setup_optimizer(model, lr, weight_decay, args):
     ]
 
     if args.optim == 'adam':
-        optimizer = Adam(optimizer_grouped_parameters, lr=lr, betas=(args.adam_beta_1, args.adam_beta_2))
+        optimizer = optim.Adam(optimizer_grouped_parameters, lr=lr, betas=(args.adam_beta_1, args.adam_beta_2))
     elif args.optim == 'sgd':
-        optimizer = SGD(optimizer_grouped_parameters, lr=lr)
+        optimizer = optim.SGD(optimizer_grouped_parameters, lr=lr)
+    elif args.optim == 'rmsprop':
+        optimizer = optim.RMSprop(optimizer_grouped_parameters, lr=lr)
     else:
         raise ValueError
 
